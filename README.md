@@ -1,422 +1,297 @@
-
 # Data Platform Demo
 
 ## Overview
 
-**Data Platform Demo** is a self-contained blueprint for bootstrapping a production-grade data platform using modern engineering practices.
+**Data Platform Demo** is a self-contained blueprint for bootstrapping a reusable AWS-based data platform foundation.
 
-This repository focuses on **platform-level infrastructure and standards**, not business-specific data products.
+It is designed to support future data product repositories such as **Data Product Demo** by providing shared platform infrastructure, security boundaries, storage zones, deployment roles, and operational foundations.
 
-It is designed to:
-
-- Provide a reusable **data platform foundation**
-- Enable rapid onboarding of new data products
-- Demonstrate **production-grade architecture patterns**
-- Support long-term extensibility
-- Serve as a **reference implementation** for real-world deployments
-
-This repository works **together with** the **Data Product Demo** repository.
+This repository is intentionally focused on the **platform layer**, not business-specific data products.
 
 ---
 
-## Design Philosophy
+## Purpose
 
-This project follows five core principles:
+Many small and mid-sized companies need a reliable data platform foundation before they can build useful analytics, reporting, automation, or AI-enabled data products.
 
-### 1. Platform First
+This project demonstrates how to create that foundation using production-minded engineering patterns:
 
-Build a stable platform foundation before deploying data products.
-
-The platform provides:
-
-- Infrastructure
-- Governance boundaries
-- Security patterns
-- Monitoring
-- CI/CD pipelines
-
-Data products are layered **on top**, not embedded inside.
+- Infrastructure as Code
+- remote Terraform state
+- repeatable environment deployment
+- shared data lake storage
+- IAM role separation
+- logging and monitoring baseline
+- CI/CD-ready structure
+- clear platform/product boundary
 
 ---
 
-### 2. Infrastructure as Code (IaC)
-
-All infrastructure is created using **Terraform**.
-
-Benefits:
-
-- Reproducibility
-- Version control
-- Environment consistency
-- Safe evolution of infrastructure
-
-No manual cloud configuration.
-
----
-
-### 3. Separation of Responsibilities
-
-**Data Platform Demo**
-- Builds platform infrastructure
-- Defines shared services
-- Provides core standards
-
-**Data Product Demo**
-- Builds product-specific infrastructure
-- Defines pipelines
-- Implements business logic
-
-This separation enables scalability.
-
----
-
-### 4. Modular Architecture
-
-Infrastructure components are built as reusable modules.
-
-Examples:
-
-- Networking
-- Storage
-- Compute
-- Identity
-- Monitoring
-
-Modules can be extended over time.
-
----
-
-### 5. Production-Ready Patterns
-
-This is not a toy demo.
-
-It demonstrates:
-
-- Environment isolation
-- Security-first design
-- Observability
-- CI/CD automation
-- Future extensibility
-
----
-
-## Platform Scope
-
-This repository builds **core platform infrastructure**, not data pipelines.
-
-The platform includes:
-
-### Core Infrastructure
-
-- Remote Terraform State Backend
-- Core Networking (VPC)
-- Identity & Access (IAM)
-- Platform Storage
-- Logging & Monitoring
-- CI/CD Bootstrap
-- Secrets Management
-- Environment Separation
-
----
-
-## Platform Components
-
-### 1. Remote State Backend
-
-Stores Terraform state securely.
-
-Typical implementation:
-
-- Object storage (S3)
-- State locking
-- Versioning enabled
-
-Purpose:
-
-- Prevent state corruption
-- Enable team collaboration
-
----
-
-### 2. Networking
-
-Creates base networking layer.
-
-Typical components:
-
-- VPC
-- Subnets
-- Routing
-- Security boundaries
-
-Purpose:
-
-- Secure traffic control
-- Enable service isolation
-
----
-
-### 3. Identity & Access Management
-
-Defines platform roles.
-
-Typical components:
-
-- Platform Admin Role
-- CI/CD Role
-- Product Deployment Role
-
-Purpose:
-
-- Enforce least privilege
-- Enable secure automation
-
----
-
-### 4. Platform Storage
-
-Creates shared storage.
-
-Typical uses:
-
-- Raw data staging
-- Logs
-- Platform artifacts
-
-Purpose:
-
-- Centralized data landing zones
-
----
-
-### 5. Monitoring & Logging
-
-Provides visibility into platform health.
-
-Typical tools:
-
-- Log collection
-- Metrics
-- Alerts
-
-Purpose:
-
-- Detect failures early
-- Support troubleshooting
-
----
-
-### 6. Secrets Management
-
-Stores sensitive values securely.
-
-Typical examples:
-
-- API keys
-- Credentials
-- Tokens
-
-Purpose:
-
-- Prevent secrets leakage
-
----
-
-### 7. CI/CD Bootstrap
-
-Creates automation roles and permissions.
-
-Typical components:
-
-- GitHub Actions permissions
-- Deployment roles
-
-Purpose:
-
-- Enable automated deployments
-
----
-
-## Repository Structure
-
+## Relationship to Data Product Demo
+
+This repository is designed to work alongside a separate data product repository.
+
+```text
+Data Platform Demo
+        ↓
+Creates shared platform infrastructure
+        ↓
+Data Product Demo
+        ↓
+Creates product-specific Snowflake, dbt, and Streamlit resources
 ```
-data-platform-demo/
+
+### Data Platform Demo owns
+
+- Terraform backend
+- shared AWS platform foundation
+- shared S3 buckets
+- IAM roles and policies
+- logging baseline
+- secrets baseline
+- CI/CD deployment foundation
+- optional networking foundation
+
+### Data Product Demo owns
+
+- product-specific Snowflake database
+- product-specific Snowflake schemas
+- product-specific warehouse
+- dbt models
+- Streamlit apps
+- product-specific CI/CD
+- product-specific business logic
+
+The guiding rule is:
+
+> Shared infrastructure belongs in the platform repo. Business-product infrastructure belongs in the product repo.
+
+---
+
+## Architecture at a Glance
+
+```text
+GitHub Repository
 │
 ├── terraform/
+│   ├── bootstrap/
+│   │   └── Remote Terraform state backend
+│   │
 │   ├── modules/
-│   │   ├── remote_state/
-│   │   ├── networking/
 │   │   ├── storage/
-│   │   ├── identity/
-│   │   ├── monitoring/
+│   │   ├── iam/
 │   │   ├── secrets/
-│   │   └── cicd/
+│   │   ├── logging/
+│   │   └── networking/
+│   │
+│   └── environments/
+│       ├── dev/
+│       ├── test/
+│       └── prod/
+│
+├── docs/
+│   └── Architecture, security, naming, and design decisions
+│
+├── scripts/
+│   └── Helper scripts for bootstrap, plan, and apply
+│
+├── .github/workflows/
+│   └── Terraform CI/CD workflows
+│
+└── .devcontainer/
+    └── Reproducible development environment
+```
+
+---
+
+## Core Infrastructure
+
+The first version of this repository should build a minimal but professional platform foundation.
+
+### 1. Terraform Backend
+
+Creates:
+
+- S3 bucket for Terraform state
+- DynamoDB table for state locking
+- bucket encryption
+- bucket versioning
+- public access block
+
+### 2. Shared Data Lake Storage
+
+Creates standard platform buckets such as:
+
+- raw landing bucket
+- refined data bucket
+- artifacts bucket
+- logs bucket
+
+These are shared platform resources that future data products can use.
+
+### 3. IAM Roles and Policies
+
+Creates role patterns for:
+
+- platform administration
+- GitHub Actions / CI/CD deployment
+- product deployment
+- read-only validation
+- Snowflake external access
+
+### 4. Secrets Baseline
+
+Creates a safe structure for future secret management using AWS Secrets Manager.
+
+Secret values should not be committed to source control.
+
+### 5. Logging Baseline
+
+Creates baseline log groups and optional alerting structures for future platform workloads.
+
+### 6. Optional Networking
+
+Networking should be kept minimal in the first version unless required.
+
+Future versions may add:
+
+- VPC
+- private subnets
+- VPC endpoints
+- security groups
+- route tables
+
+---
+
+## Recommended Repository Structure
+
+```text
+data-platform-demo/
+│
+├── README.md
+├── QUICKSTART.md
+├── DEVELOPMENT_GUIDE.md
+├── commands.md
+│
+├── .devcontainer/
+│   ├── Dockerfile
+│   ├── devcontainer.json
+│   └── setup.sh
+│
+├── .github/
+│   └── workflows/
+│       ├── terraform-ci.yml
+│       └── terraform-apply-dev.yml
+│
+├── terraform/
+│   ├── bootstrap/
+│   ├── modules/
+│   │   ├── storage/
+│   │   ├── iam/
+│   │   ├── secrets/
+│   │   ├── logging/
+│   │   └── networking/
 │   │
 │   ├── environments/
 │   │   ├── dev/
 │   │   ├── test/
 │   │   └── prod/
 │   │
-│   └── global/
-│
-├── platform-config/
-│   ├── naming/
-│   ├── tagging/
-│   ├── environment-config/
-│
-├── scripts/
-│   ├── bootstrap/
-│   └── utilities/
+│   └── examples/
+│       └── product-integration/
 │
 ├── docs/
-│   ├── architecture/
-│   ├── decisions/
-│   └── diagrams/
+│   ├── architecture.md
+│   ├── platform-boundaries.md
+│   ├── naming-and-tagging.md
+│   ├── security-model.md
+│   ├── future-roadmap.md
+│   └── decisions/
 │
-├── .github/
-│   └── workflows/
-│
-└── README.md
+└── scripts/
+    ├── bootstrap_backend.sh
+    ├── plan_dev.sh
+    └── apply_dev.sh
 ```
 
 ---
 
-## Relationship to Data Product Demo
+## Development Sequence
 
-The **Data Product Demo** depends on this platform.
+Recommended build order:
 
-Flow:
+1. Create repository skeleton and documentation.
+2. Add Terraform bootstrap backend.
+3. Add storage module.
+4. Add IAM module.
+5. Add logging module.
+6. Add secrets module.
+7. Compose the `dev` environment.
+8. Add Terraform CI workflow.
+9. Add documentation for platform/product integration.
 
-```
-Data Platform Demo
-        ↓
-Platform Infrastructure Created
-        ↓
-Data Product Demo Deploys
-        ↓
-Business Pipelines Run
-```
-
-Platform = Foundation  
-Product = Workload
+Do not start with every possible cloud service. Keep version 1 small and reliable.
 
 ---
 
-## Getting Started
+## What This Repository Should Not Do
 
-### Step 1 — Clone Repository
+This repository should not create:
 
-```
-git clone <repository-url>
-cd data-platform-demo
-```
+- dbt models
+- Streamlit apps
+- business-specific Snowflake databases
+- product-specific schemas
+- product-specific warehouses
+- business-specific ingestion pipelines
 
----
-
-### Step 2 — Configure Environment
-
-Create environment configuration:
-
-```
-terraform/environments/dev/
-```
-
-Define:
-
-- Environment name
-- Region
-- Naming conventions
+Those belong in the relevant data product repository.
 
 ---
 
-### Step 3 — Initialize Terraform
+## Example Platform Flow
 
+```text
+1. Bootstrap Terraform backend
+2. Deploy shared platform infrastructure
+3. Export platform outputs
+4. Product repository consumes outputs
+5. Product repository deploys business-specific infrastructure and workloads
 ```
-terraform init
-```
-
----
-
-### Step 4 — Plan Deployment
-
-```
-terraform plan
-```
-
-Review infrastructure changes.
-
----
-
-### Step 5 — Apply Infrastructure
-
-```
-terraform apply
-```
-
-Platform will be created.
-
----
-
-## Future Expansion
-
-This platform is intentionally extensible.
-
-Future modules may include:
-
-- Data Warehouse Provisioning
-- Streaming Infrastructure
-- Metadata Services
-- Data Governance Tools
-- Cost Monitoring
-- Data Catalog Integration
 
 ---
 
 ## Intended Use Cases
 
-This repository is suitable for:
+This repository can be used as:
 
-- Platform demonstrations
-- Reference architecture learning
-- Internal platform prototyping
-- Foundation for production systems
-
----
-
-## Engineering Standards
-
-Recommended standards:
-
-- Use semantic versioning
-- Enforce code review
-- Document architecture decisions
-- Maintain environment isolation
-- Avoid manual changes
+- a platform engineering portfolio project
+- a reusable consulting/company delivery blueprint
+- a reference implementation for small-company data platforms
+- a foundation for future Snowflake, dbt, Streamlit, Glue, or Iceberg extensions
 
 ---
 
 ## Long-Term Vision
 
-This repository evolves into:
+The long-term vision is to create a repeatable platform foundation that can support multiple product repositories.
 
-**Reusable Platform Blueprint**
+Future extensions may include:
 
-Used to:
-
-- Deploy multiple environments
-- Support multiple products
-- Enable scalable architecture growth
+- Snowflake external volume integration
+- AWS Glue ingestion framework
+- Iceberg table support
+- metadata/catalog integration
+- cost monitoring
+- data quality monitoring
+- platform observability dashboards
 
 ---
 
-## Author's Intent
+## Design Principle
 
-This project is designed to:
+The central design principle is:
 
-- Demonstrate platform engineering discipline
-- Provide reusable infrastructure foundations
-- Enable product-level innovation on top
+> Build the platform once, then allow many data products to be deployed on top of it.
 
-It represents:
-
-**Platform Thinking — Not Just Pipeline Building**
+This keeps the architecture clean, reusable, and easier to grow over time.

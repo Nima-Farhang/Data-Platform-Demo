@@ -1,993 +1,804 @@
-# Data Platform Demo — Repository Blueprint and Development Guidance
+# Data Platform Demo — Development Guidance
 
 ## 1. Purpose of the new repository
 
 The new repository should be called:
 
 ```text
-Data-Platform-Demo
+data-platform-demo
 ```
 
-Its purpose is to become a **self-contained blueprint for bootstrapping a reusable data platform**, similar in spirit to the existing `Data-Product-Demo`, but focused on the **platform foundation** rather than a single business-facing data product.
+Its purpose is to demonstrate a reusable, self-contained **data platform bootstrap blueprint**.
 
-The positioning should be:
+This repository is not a single business data product. It is the platform foundation that allows future data product repositories to be deployed safely and consistently.
 
-> A compact, production-minded data platform starter kit for small companies, built with Snowflake, Terraform, dbt, GitHub Actions, and a clean structure that can be extended by future data products.
+The intended positioning is:
 
-This repository should not try to become a full enterprise platform. It should show the minimum serious foundation that a small company needs before multiple data products can be added safely.
+> A production-style platform foundation for small companies that need a clean, governed, extensible data platform without starting from a large enterprise architecture.
+
+This aligns with the broader company idea: building reusable data product and data platform blueprints for small and mid-sized organisations.
 
 ---
 
-## 2. What I observed in the existing Data Product Demo
+## 2. Review of Data Product Demo
 
-The `Data-Product-Demo` repository has a strong and clear idea:
+The `Data-Product-Demo` repository is a good reference pattern for the new `Data Platform Demo` repository.
 
-- It is self-contained.
-- It has infrastructure, transformation, application, and CI/CD in one place.
-- It demonstrates a data-product delivery pattern similar to a microservice.
-- It is easy to understand for a reviewer or potential client.
-- It focuses on one bounded business product rather than an entire enterprise platform.
+### What the Data Product Demo does well
 
-Current major components:
+It is a self-contained data product repository with:
 
-```text
-.devcontainer/                Local/Codespaces development environment
-.github/workflows/            Terraform, dbt, and Streamlit CI/CD
-TERRAFORM/                    Snowflake infrastructure
-DBT/data_product_demo/        dbt project for the product
-STREAMLIT/                    Snowflake Streamlit apps
-QUICKSTART.md                 Fast-start guide
-README.md                     Main project explanation
-```
+- Terraform for product-specific Snowflake infrastructure
+- dbt for transformation and modelling
+- Streamlit apps for product-facing consumption
+- GitHub Actions for deployment automation
+- Codespaces/devcontainer support for repeatable development
+- Clear documentation through `README.md`, `QUICKSTART.md`, and layer-specific docs
 
-The key design principle is excellent:
+### Core design pattern
 
-> One repository contains everything needed to build, deploy, and explain one focused data product.
-
-For the new `Data-Platform-Demo`, we should keep the same clarity and self-contained style, but change the scope from:
+The Data Product Demo follows this structure:
 
 ```text
-one business data product
+Repository
+├── TERRAFORM/       Product-specific Snowflake objects
+├── DBT/             Product-specific data models
+├── STREAMLIT/       Product-specific apps
+├── .github/         Product-specific CI/CD
+└── .devcontainer/   Developer environment
 ```
 
-to:
+### Important lesson for the new platform repository
 
-```text
-one reusable platform foundation that future data products can sit on
-```
+The Data Product Demo proves the pattern of:
+
+> One repository = one deployable unit with infrastructure, automation, and documentation.
+
+The new `Data Platform Demo` should follow the same principle, but at the platform layer instead of the product layer.
 
 ---
 
-## 3. What I observed in the existing Data Platform Framework
+## 3. Review of the Terraform repository
 
-The `Data-Platform-Framework` repository is valuable, but it is not currently a complete platform bootstrap repository.
+The uploaded Terraform repository is much more relevant to the `Data Platform Demo` idea than the earlier `Data Platform Framework` repository.
 
-It is mainly a **dbt framework and engineering standards repository**.
+### Current Terraform repository structure
 
-Current strengths:
-
-- Reusable dbt macros
-- Standard schema generation logic
-- Query tagging
-- Audit column helper
-- Freshness testing helper
-- Demo-safe sensitivity classification
-- Structured documentation
-- AI-assisted engineering workflow prompts
-- Example data product consuming the shared utilities
-- SQL linting and validation workflows
-
-Current structure:
+The current structure is broadly:
 
 ```text
-.github/agents/               AI role prompts
-.github/workflows/            Validation and linting
-skills/                       AI task guidance
-profiles/                     Example dbt profile
-configs/docs                  Architecture and principles
-data-platform-utils/          Reusable dbt macros and tests
-data-product-demo/            Example dbt project using the utilities
+Terraform-master/
+├── .devcontainer/
+├── bootstraps/
+├── networking/
+├── data_platform/
+├── setup.sh
+├── commands.txt
+├── requirement.txt
+└── README.md
 ```
 
-This repository is strong as a **framework layer**, but less suitable as the complete foundation for the new `Data-Platform-Demo` because it does not currently include a Terraform-based infrastructure bootstrap.
+### What works well
 
-The best way to use it is:
+The repository already has several useful ideas:
 
-```text
-Data-Platform-Framework = reusable dbt standards, macros, and engineering conventions
-Data-Platform-Demo      = deployable platform foundation using Terraform + dbt + CI/CD
-Data-Product-Demo       = example business data product built on top of a platform
-```
+1. **Bootstrap-first thinking**
+
+   The `bootstraps/` folder creates:
+
+   - S3 bucket for Terraform remote state
+   - DynamoDB table for state locking
+   - S3 versioning
+   - S3 encryption
+   - public access blocking
+
+   This is the correct first step for a serious Terraform-based platform.
+
+2. **Separation of infrastructure layers**
+
+   Separate folders exist for:
+
+   - bootstrap resources
+   - networking
+   - data platform resources
+
+   This is a good foundation for future layering.
+
+3. **Remote state usage**
+
+   The `networking/` and `data_platform/` folders already use S3 backend configuration.
+
+4. **AWS-first platform direction**
+
+   This matches the intended platform direction and your current AWS/Snowflake career narrative.
+
+### What needs improvement before turning it into Data Platform Demo
+
+The current Terraform repo is a good prototype, but not yet a polished platform demo.
+
+Main gaps:
+
+1. **Hard-coded account-specific values**
+
+   Examples:
+
+   - bucket suffixes
+   - AWS account identifiers
+   - backend bucket names
+   - region values
+
+   These should be parameterised or documented clearly.
+
+2. **No reusable module structure yet**
+
+   The current folders are root Terraform projects, not reusable modules.
+
+   For a platform demo, use both:
+
+   - reusable modules
+   - environment compositions
+
+3. **Networking folder is not really networking yet**
+
+   The current `networking/` layer creates an S3 bucket named `networking-main...`.
+
+   For a platform blueprint, networking should eventually include:
+
+   - VPC
+   - private/public subnets if needed
+   - route tables
+   - VPC endpoints for S3/Secrets/CloudWatch where appropriate
+
+   However, for a minimal demo, we can start without heavy networking if the platform is serverless/S3/Snowflake-first.
+
+4. **Data platform folder is currently too small**
+
+   It creates a landing bucket only. This is a good start, but the platform demo should include a clearer shared data lake structure.
+
+5. **No CI/CD workflows yet**
+
+   The Data Product Demo has useful GitHub Actions. The new platform repository should include Terraform validation and plan/apply workflows.
+
+6. **No clear environment model**
+
+   The current repo mostly assumes `dev`. The demo should support at least `dev`, with structure ready for `test` and `prod`.
+
+7. **No platform documentation pattern yet**
+
+   The new repository should include architecture notes, decisions, and runbooks.
 
 ---
 
-## 4. Recommended relationship between the repositories
+## 4. Repository responsibility boundary
 
-These repositories should have distinct responsibilities.
+This is the most important design rule.
 
-### Repository 1 — Data Platform Demo
+### Data Platform Demo owns shared platform infrastructure
+
+The platform repository should create:
+
+- Terraform remote state backend
+- shared AWS account/platform baseline
+- shared storage zones
+- shared IAM roles and policies
+- shared logging and monitoring baseline
+- shared secrets structure
+- CI/CD deployment roles
+- optional networking foundation
+- outputs that product repositories can consume
+
+### Data Product Demo owns product-specific infrastructure
+
+The product repository should create:
+
+- product Snowflake database
+- product Snowflake schemas
+- product warehouse
+- product resource monitor
+- product service user
+- dbt project
+- product Streamlit apps
+- product-specific S3 prefixes or buckets if required
+- product-specific ingestion resources if required
+
+### Boundary rule
+
+Use this rule:
+
+> If an infrastructure component is reused by multiple products, it belongs in Data Platform Demo. If it exists only for one business use case, it belongs in Data Product Demo.
+
+---
+
+## 5. Basic infrastructure Data Platform Demo should build
+
+For version 1, keep it small, clean, and professional.
+
+Do not overbuild.
+
+The platform demo should create the following core infrastructure.
+
+---
+
+### 5.1 Terraform bootstrap backend
 
 Purpose:
 
-> Bootstrap the shared platform foundation.
+- Store Terraform state remotely
+- Support safe collaboration
+- Prevent state corruption
 
-It should create:
+Resources:
 
-- Snowflake platform database
-- environment-specific schemas
-- platform warehouses
-- platform roles
-- service users
-- resource monitors
-- governance metadata structures
-- optional observability tables or views
-- CI/CD for Terraform and platform dbt utilities
+- S3 bucket for Terraform state
+- DynamoDB table for state locking
+- S3 versioning
+- S3 server-side encryption
+- S3 public access block
 
-It should not create business-product-specific infrastructure.
+This already exists in the current Terraform repo and should be retained, cleaned up, and documented.
 
-### Repository 2 — Data Product Demo
-
-Purpose:
-
-> Demonstrate a single business data product built on top of the platform.
-
-It can create:
-
-- product-specific database or schemas
-- product-specific warehouse if required
-- product-specific service user
-- product-specific dbt models
-- product-specific Streamlit apps
-- product-specific dashboards or marts
-
-### Repository 3 — Data Platform Framework
-
-Purpose:
-
-> Provide reusable dbt utilities and engineering standards.
-
-It can supply:
-
-- macros
-- tests
-- schema naming logic
-- audit columns
-- query tags
-- style guide
-- model-building skills/prompts
-
-Over time, some of this may be copied into or packaged for the `Data-Platform-Demo`, but it should not be confused with infrastructure provisioning.
-
----
-
-## 5. Important boundary: platform infrastructure vs data product infrastructure
-
-You explicitly noted an important rule:
-
-> Infrastructure specific to a data product should be defined in the data product repository, not in the data platform framework.
-
-I agree with this. The platform repository should only define shared capabilities.
-
-### Platform-owned infrastructure
-
-The platform demo should own:
-
-- account-level or shared Snowflake roles
-- shared warehouses
-- shared databases/schemas used by many products
-- shared logging/metadata areas
-- shared service users
-- resource monitors
-- governance objects
-- default grants and access patterns
-- CI/CD foundation
-- reusable dbt package or utilities
-
-### Product-owned infrastructure
-
-A data product repository should own:
-
-- product database or product schemas
-- product-specific warehouse where justified
-- product-specific dbt service user
-- product-specific Streamlit app schema/stage
-- product-specific grants
-- product-specific ingestion stages
-- product-specific alerting objects
-- product-specific data models
-
-This separation is important because it prevents the platform repo from becoming a dumping ground for every product.
-
----
-
-## 6. Basic infrastructure the Data Platform Demo should build
-
-The first version should be deliberately modest but professional.
-
-It should build enough infrastructure to prove that a small company can start with a clean platform foundation and add data products later.
-
-### 6.1 Snowflake platform database
-
-Recommended object:
+Recommended naming pattern:
 
 ```text
-<ENVIRONMENT>_DATA_PLATFORM_DB
+<project>-terraform-state-<environment>-<account-suffix>
+<project>-terraform-lock-<environment>
 ```
 
 Example:
 
 ```text
-DEV_DATA_PLATFORM_DB
-PROD_DATA_PLATFORM_DB
+data-platform-demo-terraform-state-dev-123456789012
+data-platform-demo-terraform-lock-dev
 ```
+
+---
+
+### 5.2 Shared data lake buckets
 
 Purpose:
 
-- hold shared platform metadata
-- hold governance/reference data
-- hold operational logs or views
-- hold reusable platform utility objects
+- Provide standard shared landing zones for future data products
+- Demonstrate a clean lake-style platform foundation
 
-Recommended schemas:
+Recommended buckets:
 
 ```text
-CONFIG
-GOVERNANCE
-OBSERVABILITY
-AUDIT
-UTILS
+data-platform-demo-raw-<environment>-<account-suffix>
+data-platform-demo-refined-<environment>-<account-suffix>
+data-platform-demo-artifacts-<environment>-<account-suffix>
+data-platform-demo-logs-<environment>-<account-suffix>
 ```
 
-Optional later schemas:
+Recommended zones:
 
-```text
-SECURITY
-REFERENCE
-CONTROL
-```
+- `raw`: immutable source-aligned landing data
+- `refined`: cleaned/restructured files available for product consumption
+- `artifacts`: deployment artifacts, scripts, packaged jobs
+- `logs`: platform and pipeline logs
 
-### 6.2 Snowflake warehouses
+For a demo, separate buckets make the architecture easier to understand. In production, this could also be implemented as one bucket with zone prefixes.
 
-Start with two shared warehouses:
+Required controls:
 
-```text
-<ENVIRONMENT>_PLATFORM_TRANSFORM_WH
-<ENVIRONMENT>_PLATFORM_ADMIN_WH
-```
+- block public access
+- server-side encryption
+- versioning where appropriate
+- lifecycle rules for temporary/log data
+- standard tags
+
+---
+
+### 5.3 IAM roles and policies
 
 Purpose:
 
-- `PLATFORM_TRANSFORM_WH`: used by shared dbt/platform jobs
-- `PLATFORM_ADMIN_WH`: used by Terraform/admin/platform operations where appropriate
-
-Both should be small by default:
-
-```text
-XSMALL
-AUTO_SUSPEND = 60
-AUTO_RESUME = TRUE
-INITIALLY_SUSPENDED = TRUE
-```
-
-Later, you can add:
-
-```text
-<ENVIRONMENT>_INGESTION_WH
-<ENVIRONMENT>_MONITORING_WH
-```
-
-But do not overbuild in version 1.
-
-### 6.3 Resource monitor
-
-Create a platform-level resource monitor:
-
-```text
-<ENVIRONMENT>_DATA_PLATFORM_RESOURCE_MONITOR
-```
-
-Purpose:
-
-- demonstrate cost control
-- avoid runaway demo costs
-- show production-minded Snowflake management
-
-Use a small default quota for demo purposes.
-
-### 6.4 Roles
-
-Create a simple but expandable RBAC structure.
+- Demonstrate secure platform access patterns
+- Avoid using long-lived personal credentials
+- Prepare for CI/CD and product deployments
 
 Recommended roles:
 
 ```text
-<ENVIRONMENT>_DATA_PLATFORM_ADMIN_ROLE
-<ENVIRONMENT>_DATA_PLATFORM_ENGINEER_ROLE
-<ENVIRONMENT>_DATA_PLATFORM_VIEWER_ROLE
-<ENVIRONMENT>_DATA_PRODUCT_DEVELOPER_ROLE
+DataPlatformAdminRole
+DataPlatformCicdRole
+DataProductDeploymentRole
+DataProductReadOnlyRole
+SnowflakeExternalAccessRole
 ```
 
-Purpose:
+Minimal responsibilities:
 
-- `ADMIN_ROLE`: owns/manages platform objects
-- `ENGINEER_ROLE`: builds and manages platform dbt assets
-- `VIEWER_ROLE`: read-only access to platform metadata/observability
-- `DATA_PRODUCT_DEVELOPER_ROLE`: baseline role that future data product repos may inherit or be granted
+- `DataPlatformAdminRole`: admin-level platform operations, used carefully
+- `DataPlatformCicdRole`: GitHub Actions/Terraform deployment role
+- `DataProductDeploymentRole`: role that future product repos can assume for product-specific deployment
+- `DataProductReadOnlyRole`: read-only access for validation and demos
+- `SnowflakeExternalAccessRole`: IAM role Snowflake can use for external stages, Iceberg, or external volumes
 
-Keep the role hierarchy simple in version 1.
+Important design note:
 
-### 6.5 Service users
-
-Create only the service users needed by the platform demo.
-
-Recommended:
-
-```text
-SVC_<ENVIRONMENT>_TERRAFORM_PLATFORM
-SVC_<ENVIRONMENT>_DBT_PLATFORM
-```
-
-However, there is a practical Snowflake/Terraform consideration:
-
-- the Terraform user may need to exist before Terraform can manage objects
-- the repo can document how to create the bootstrap Terraform user manually
-- Terraform can then manage downstream roles, grants, warehouses, databases, and dbt user
-
-For the first implementation, it is acceptable to document the Terraform bootstrap user as a prerequisite rather than create it inside the same Terraform project.
-
-### 6.6 Shared platform metadata tables
-
-Create a small set of useful platform tables.
-
-Recommended in `AUDIT` schema:
-
-```text
-DEPLOYMENT_RUN_LOG
-DATA_PRODUCT_REGISTRY
-```
-
-Recommended in `GOVERNANCE` schema:
-
-```text
-DATA_CLASSIFICATION_POLICY
-SENSITIVE_COLUMN_REGISTRY
-```
-
-Recommended in `OBSERVABILITY` schema:
-
-```text
-QUERY_COST_BY_TAG_VW
-MODEL_RUN_HISTORY_VW
-```
-
-For version 1, these can be simple Snowflake tables/views created either by Terraform or dbt.
-
-Recommendation:
-
-- Terraform creates the database, schemas, warehouses, roles, users, and grants.
-- dbt creates platform utility views/tables inside the platform database.
-
-This keeps Terraform focused on infrastructure and dbt focused on SQL objects.
-
-### 6.7 Default grants
-
-The demo should show a basic pattern:
-
-- platform admin role owns/manages platform database
-- platform engineer can create and modify objects in selected schemas
-- platform viewer can read observability/governance metadata
-- dbt platform user uses platform engineer role
-
-Do not use `ACCOUNTADMIN` in dbt profiles except as a temporary local demo shortcut. The repo should teach the correct pattern.
-
-### 6.8 Remote Terraform state
-
-Keep the same idea used in the existing Data Product Demo:
-
-```text
-backend-dev.hcl
-backend-prod.hcl
-environments/dev.tfvars
-environments/prod.tfvars
-```
-
-Use S3 remote state if that is the chosen direction.
-
-This aligns with your broader AWS/Snowflake platform story.
+The platform repo can create the shared IAM role for Snowflake integration, but product repos should create their own Snowflake stages, databases, schemas, and grants.
 
 ---
 
-## 7. Recommended project structure
+### 5.4 Secrets baseline
 
-Recommended structure for the new repository:
+Purpose:
+
+- Provide a safe place for future credentials and integration values
+
+Recommended AWS Secrets Manager structure:
 
 ```text
-Data-Platform-Demo/
+/data-platform-demo/dev/snowflake/terraform-user
+/data-platform-demo/dev/github/deployment
+/data-platform-demo/dev/shared/api-placeholder
+```
+
+For the demo, avoid storing real secrets. Create placeholder secret structures or document how secrets should be created manually.
+
+Recommended approach:
+
+- Terraform can create secret containers
+- Secret values should be injected outside source control
+- Never commit secret values
+
+---
+
+### 5.5 Logging and monitoring baseline
+
+Purpose:
+
+- Show that this is a production-minded platform, not just storage creation
+
+Recommended resources:
+
+- CloudWatch log groups
+- S3 access logging target or logging bucket
+- basic CloudWatch alarms where useful
+- optional SNS topic for platform alerts
+
+Minimal version:
+
+```text
+/platform/data-platform-demo/dev
+/platform/data-platform-demo/dev/terraform
+/platform/data-platform-demo/dev/ingestion
+```
+
+This gives later Glue/Lambda/ingestion modules somewhere consistent to send logs.
+
+---
+
+### 5.6 Optional networking baseline
+
+This depends on how far you want the first version to go.
+
+For v1, I recommend keeping networking light.
+
+Reason:
+
+The first platform demo is likely AWS S3 + IAM + Snowflake-oriented. You do not need EC2, NAT gateways, or heavy private networking to prove the core pattern.
+
+Recommended v1 networking scope:
+
+- document networking assumptions
+- optionally create VPC only if future modules need it
+- avoid NAT gateways in demo to prevent cost surprises
+
+Recommended future networking scope:
+
+- VPC
+- private subnets
+- VPC endpoints for S3, Secrets Manager, CloudWatch
+- security groups
+- route tables
+
+If you include networking in v1, make it optional through a variable:
+
+```text
+enable_networking = true / false
+```
+
+---
+
+### 5.7 CI/CD baseline
+
+Purpose:
+
+- Mirror the professional pattern already shown in Data Product Demo
+- Make the repository self-contained
+
+Recommended GitHub Actions:
+
+```text
+.github/workflows/terraform-ci.yml
+.github/workflows/terraform-apply-dev.yml
+```
+
+Initial workflow responsibilities:
+
+- terraform fmt
+- terraform validate
+- terraform plan
+- optional apply to dev on merge to main/master
+
+Do not apply automatically to prod in the first demo.
+
+---
+
+### 5.8 Platform outputs
+
+Purpose:
+
+Future product repositories need stable outputs to consume.
+
+Recommended outputs:
+
+- raw bucket name
+- refined bucket name
+- artifacts bucket name
+- logs bucket name
+- CI/CD role ARN
+- product deployment role ARN
+- Snowflake external access role ARN
+- environment name
+- AWS region
+
+These outputs are important because they become the contract between platform and product repositories.
+
+---
+
+## 6. Proposed Data Platform Demo project structure
+
+Recommended structure:
+
+```text
+data-platform-demo/
 │
 ├── README.md
 ├── QUICKSTART.md
-├── .gitignore
-├── .editorconfig
+├── DEVELOPMENT_GUIDE.md
+├── commands.md
 │
 ├── .devcontainer/
 │   ├── Dockerfile
 │   ├── devcontainer.json
-│   ├── requirements.txt
-│   └── init.sh
+│   └── setup.sh
 │
 ├── .github/
 │   └── workflows/
-│       ├── terraform.yml
-│       ├── dbt_platform.yml
-│       └── sql_lint.yml
+│       ├── terraform-ci.yml
+│       └── terraform-apply-dev.yml
 │
-├── TERRAFORM/
-│   ├── README.md
-│   ├── commands.md
-│   ├── versions.tf
-│   ├── provider.tf
-│   ├── backend.tf
-│   ├── backend-dev.hcl
-│   ├── backend-prod.hcl
-│   ├── variables.tf
-│   ├── outputs.tf
-│   ├── main.tf
-│   ├── locals.tf
+├── terraform/
+│   ├── bootstrap/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│   │   ├── providers.tf
+│   │   └── versions.tf
+│   │
+│   ├── modules/
+│   │   ├── storage/
+│   │   ├── iam/
+│   │   ├── secrets/
+│   │   ├── logging/
+│   │   └── networking/
+│   │
 │   ├── environments/
-│   │   ├── dev.tfvars
-│   │   └── prod.tfvars
-│   └── modules/
-│       ├── snowflake_database/
-│       ├── snowflake_warehouse/
-│       ├── snowflake_rbac/
-│       └── snowflake_service_user/
-│
-├── DBT/
-│   └── data_platform_demo/
-│       ├── README.md
-│       ├── dbt_project.yml
-│       ├── packages.yml
-│       ├── macros/
-│       │   ├── generate_schema_name.sql
-│       │   ├── set_query_tag.sql
-│       │   └── add_audit_columns.sql
-│       ├── models/
-│       │   ├── governance/
-│       │   │   ├── _governance_models.yml
-│       │   │   ├── data_classification_policy.sql
-│       │   │   └── sensitive_column_registry.sql
-│       │   ├── observability/
-│       │   │   ├── _observability_models.yml
-│       │   │   ├── query_cost_by_tag.sql
-│       │   │   └── model_run_history.sql
-│       │   └── audit/
-│       │       ├── _audit_models.yml
-│       │       └── data_product_registry.sql
-│       ├── seeds/
-│       │   ├── seed_data_products.csv
-│       │   └── seed_data_classification_policy.csv
-│       ├── tests/
-│       └── analyses/
-│           └── platform_cost_review.sql
+│   │   ├── dev/
+│   │   │   ├── backend.hcl
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   ├── terraform.tfvars
+│   │   │   └── versions.tf
+│   │   │
+│   │   ├── test/
+│   │   │   └── README.md
+│   │   │
+│   │   └── prod/
+│   │       └── README.md
+│   │
+│   └── examples/
+│       └── product-integration/
+│           └── README.md
 │
 ├── docs/
-│   ├── architecture-overview.md
-│   ├── platform-principles.md
-│   ├── rbac-model.md
-│   ├── adding-a-data-product.md
-│   ├── environment-strategy.md
-│   └── roadmap.md
+│   ├── architecture.md
+│   ├── platform-boundaries.md
+│   ├── naming-and-tagging.md
+│   ├── security-model.md
+│   ├── future-roadmap.md
+│   └── decisions/
+│       ├── 0001-platform-vs-product-boundary.md
+│       └── 0002-aws-first-platform-bootstrap.md
 │
-└── profiles/
-    ├── README.md
-    └── profiles.example.yml
+└── scripts/
+    ├── bootstrap_backend.sh
+    ├── plan_dev.sh
+    └── apply_dev.sh
 ```
 
 ---
 
-## 8. Why this structure works
+## 7. Why this structure is better than the current Terraform repo
 
-### 8.1 It mirrors the Data Product Demo
+The current Terraform repo has a good early idea, but the new structure improves it in these ways:
 
-The new repo keeps the same understandable pattern:
-
-```text
-TERRAFORM + DBT + CI/CD + docs + devcontainer
-```
-
-This makes it easy to explain in interviews, client conversations, and GitHub README material.
-
-### 8.2 It separates platform and product responsibilities
-
-The platform repo creates shared foundations.
-
-The product repo creates product-specific assets.
-
-This gives you a mature architecture story:
+### Current repo
 
 ```text
-Platform enables data products.
-Data products do not mutate the platform foundation casually.
+bootstraps/
+networking/
+data_platform/
 ```
 
-### 8.3 It is small enough to finish
+This is simple, but it can become difficult to scale because each folder is an independent root project.
 
-The repo should not attempt:
+### New repo
 
-- full data catalog implementation
-- complex masking policies in version 1
-- full data mesh governance
-- full observability tooling
-- multi-cloud support
-- enterprise-grade RBAC complexity
+```text
+terraform/bootstrap/
+terraform/modules/
+terraform/environments/dev/
+```
 
-The goal is a credible blueprint, not a never-ending platform.
+This creates a cleaner pattern:
+
+- `bootstrap` creates the backend
+- `modules` contain reusable components
+- `environments` compose modules into real environments
+
+This is closer to how maintainable Terraform repositories are usually structured.
 
 ---
 
-## 9. Recommended implementation phases
+## 8. Recommended development sequence
 
-### Phase 1 — Repository skeleton
+Use this build order.
 
-Create the structure only.
+### Stage 1 — Repository skeleton
 
-Deliverables:
+Create:
 
 - README.md
 - QUICKSTART.md
-- docs
-- empty Terraform structure
-- empty dbt platform project
-- devcontainer base
-- GitHub workflow placeholders
+- DEVELOPMENT_GUIDE.md
+- folder structure
+- .gitignore
+- .devcontainer
 
-Goal:
+No Terraform resources yet except copied bootstrap structure.
 
-> A reviewer can understand the intention without any implementation yet.
+### Stage 2 — Bootstrap backend
 
-### Phase 2 — Terraform foundation
+Move and clean the current `bootstraps/` code into:
 
-Implement Terraform for:
+```text
+terraform/bootstrap/
+```
 
-- platform database
-- platform schemas
-- two warehouses
-- resource monitor
-- roles
-- grants
-- dbt service user
+Create:
+
+- S3 state bucket
+- DynamoDB lock table
+- encryption
+- versioning
+- public access block
+
+### Stage 3 — Storage module
+
+Create module:
+
+```text
+terraform/modules/storage/
+```
+
+It should create:
+
+- raw bucket
+- refined bucket
+- artifacts bucket
+- logs bucket
+- bucket policies
+- lifecycle rules
 - outputs
 
-Goal:
+### Stage 4 — IAM module
 
-> `terraform plan` and `terraform apply` can stand up the shared Snowflake foundation.
+Create module:
 
-### Phase 3 — dbt platform project
+```text
+terraform/modules/iam/
+```
 
-Implement dbt for:
+It should create:
 
-- query tagging
-- schema naming
-- audit column macro
-- seeded data product registry
-- seeded classification policy
-- observability views
-- basic tests
+- platform CI/CD role
+- product deployment role
+- read-only role
+- Snowflake external access role placeholder
 
-Goal:
+### Stage 5 — Logging module
 
-> `dbt build` creates useful platform metadata structures.
+Create module:
 
-### Phase 4 — CI/CD
+```text
+terraform/modules/logging/
+```
 
-Add GitHub Actions for:
+It should create:
 
-- Terraform fmt/validate/plan
-- Terraform apply to prod on protected branch
-- dbt compile/build/test
-- SQL linting
+- CloudWatch log groups
+- optional SNS topic
+- naming convention for future logs
 
-Goal:
+### Stage 6 — Secrets module
 
-> The repo demonstrates professional engineering workflow.
+Create module:
 
-### Phase 5 — Connect to Data Product Demo
+```text
+terraform/modules/secrets/
+```
 
-Update documentation to show how a future data product connects to this platform.
+It should create:
+
+- placeholder secrets
+- naming convention
+- no committed secret values
+
+### Stage 7 — Environment composition
+
+Create:
+
+```text
+terraform/environments/dev/
+```
+
+This composes:
+
+- storage module
+- iam module
+- logging module
+- secrets module
+- optional networking module
+
+### Stage 8 — CI/CD
+
+Add GitHub Actions:
+
+- format
+- validate
+- plan
+- controlled apply for dev
+
+### Stage 9 — Documentation polish
+
+Add:
+
+- architecture.md
+- security-model.md
+- platform-boundaries.md
+- future-roadmap.md
+
+---
+
+## 9. Suggested first version infrastructure boundary
+
+For v1, build only this:
+
+```text
+Terraform backend
+Shared S3 data lake buckets
+IAM roles
+Secrets Manager placeholders
+CloudWatch log groups
+GitHub Actions Terraform CI
+Documentation
+```
+
+Do not build yet:
+
+- Glue jobs
+- Lambda ingestion
+- Step Functions
+- ECS
+- EKS
+- full VPC networking
+- Snowflake databases
+- dbt projects
+- Streamlit apps
+
+Those should come later or live in product repositories.
+
+---
+
+## 10. How Data Product Demo should consume Data Platform Demo
+
+The relationship should be:
+
+```text
+Data Platform Demo
+        ↓ provides shared platform outputs
+Data Product Demo
+        ↓ creates product-specific Snowflake/dbt/Streamlit resources
+Business data product
+```
+
+Example integration pattern:
+
+1. Data Platform Demo creates shared buckets and IAM roles.
+2. Data Product Demo receives platform outputs manually or via Terraform remote state.
+3. Data Product Demo creates its own Snowflake database, schemas, warehouse, and stages.
+4. Data Product Demo uses the platform-provided S3 locations for landing or external access.
+
+---
+
+## 11. Recommended naming convention
+
+Use consistent names from the start.
+
+Recommended pattern:
+
+```text
+<project>-<component>-<environment>-<account-suffix>
+```
 
 Examples:
 
-- which role a product dbt user should receive
-- how product query tags should be structured
-- how product metadata can be registered
-- what infrastructure remains product-owned
-
-Goal:
-
-> The platform demo and product demo tell one coherent story.
-
----
-
-## 10. Suggested README positioning
-
-The README should say something like:
-
-```markdown
-# Data Platform Demo
-
-A self-contained blueprint for bootstrapping a small-company data platform using Snowflake, Terraform, dbt, and GitHub Actions.
-
-This repository demonstrates the shared foundation that future data products can build on top of: databases, schemas, warehouses, roles, service users, governance metadata, observability views, and CI/CD automation.
-
-It is intentionally compact. The goal is not to replicate a large enterprise platform, but to show a clean, repeatable, production-minded starting point for growing companies.
+```text
+data-platform-demo-raw-dev-123456789012
+data-platform-demo-refined-dev-123456789012
+data-platform-demo-artifacts-dev-123456789012
+data-platform-demo-logs-dev-123456789012
 ```
 
-Avoid positioning it as a consultancy demo only. Position it as a reusable engineering product.
-
----
-
-## 11. Recommended Snowflake naming convention
-
-Use consistent object names.
+Recommended tags:
 
 ```text
-<ENVIRONMENT>_DATA_PLATFORM_DB
-<ENVIRONMENT>_PLATFORM_TRANSFORM_WH
-<ENVIRONMENT>_PLATFORM_ADMIN_WH
-<ENVIRONMENT>_DATA_PLATFORM_RESOURCE_MONITOR
-<ENVIRONMENT>_DATA_PLATFORM_ADMIN_ROLE
-<ENVIRONMENT>_DATA_PLATFORM_ENGINEER_ROLE
-<ENVIRONMENT>_DATA_PLATFORM_VIEWER_ROLE
-SVC_<ENVIRONMENT>_DBT_PLATFORM
-```
-
-Example for production:
-
-```text
-PROD_DATA_PLATFORM_DB
-PROD_PLATFORM_TRANSFORM_WH
-PROD_PLATFORM_ADMIN_WH
-PROD_DATA_PLATFORM_RESOURCE_MONITOR
-PROD_DATA_PLATFORM_ADMIN_ROLE
-PROD_DATA_PLATFORM_ENGINEER_ROLE
-PROD_DATA_PLATFORM_VIEWER_ROLE
-SVC_PROD_DBT_PLATFORM
+Project     = data-platform-demo
+Environment = dev
+Owner       = data-platform
+ManagedBy   = terraform
+Purpose     = platform-foundation
 ```
 
 ---
 
-## 12. Recommended Terraform design
+## 12. README positioning
 
-Keep Terraform modular, but do not over-engineer.
+The README should position the repository as:
 
-Use modules only where repetition is likely:
+> A reusable platform foundation for small-company data platforms.
 
-```text
-modules/snowflake_database
-modules/snowflake_warehouse
-modules/snowflake_rbac
-modules/snowflake_service_user
-```
+Avoid describing it as only a Terraform repo.
 
-Do not create too many tiny modules in version 1.
+Better wording:
 
-The top-level `main.tf` should remain readable enough that a reviewer can understand the full platform foundation quickly.
-
-Recommended Terraform responsibilities:
-
-- providers
-- backend
-- database
-- schemas
-- warehouses
-- resource monitors
-- roles
-- grants
-- dbt service user
-- outputs
-
-Avoid using Terraform for:
-
-- detailed dbt SQL models
-- seed data
-- complex observability SQL
-- frequently changing business metadata
-
-Those belong in dbt.
+> Data Platform Demo is a self-contained blueprint for bootstrapping the shared AWS foundation required by future data product repositories.
 
 ---
 
-## 13. Recommended dbt platform design
+## 13. Final recommendation
 
-The dbt project should be small but useful.
+Use the current Terraform repo as the seed, but restructure it before adding more resources.
 
-Recommended dbt layers:
+The best path is:
 
-```text
-models/governance
-models/observability
-models/audit
-```
+1. Keep the bootstrap concept.
+2. Move to a `terraform/bootstrap`, `terraform/modules`, `terraform/environments` structure.
+3. Build only shared platform infrastructure in this repo.
+4. Keep data-product-specific infrastructure in Data Product Demo.
+5. Add strong documentation so this becomes a portfolio-grade platform blueprint.
 
-### Governance examples
-
-```text
-data_classification_policy.sql
-sensitive_column_registry.sql
-```
-
-Purpose:
-
-- define simple classification patterns
-- show how sensitive data can be registered or reviewed
-
-### Observability examples
+This will give you two complementary repositories:
 
 ```text
-query_cost_by_tag.sql
-model_run_history.sql
+Data Platform Demo  = shared platform foundation
+Data Product Demo   = product implementation on top of the platform
 ```
 
-Purpose:
+Together, they represent the company idea clearly:
 
-- show query cost attribution
-- show model execution visibility
-- support platform cost review
-
-### Audit examples
-
-```text
-data_product_registry.sql
-```
-
-Purpose:
-
-- register future data products
-- track owner, product name, domain, criticality, and repository link
-
----
-
-## 14. Suggested seed files
-
-Use seeds to keep the first implementation simple.
-
-### seed_data_products.csv
-
-Columns:
-
-```text
-data_product_name,domain,owner,repository_url,criticality,status
-```
-
-Example rows:
-
-```text
-customer_insights,commercial,example_owner,https://github.com/example/customer-insights,medium,active
-service_operations,operations,example_owner,https://github.com/example/service-operations,medium,active
-```
-
-### seed_data_classification_policy.csv
-
-Columns:
-
-```text
-classification,description,example_columns,handling_guidance
-```
-
-Example classifications:
-
-```text
-PUBLIC
-INTERNAL
-CONFIDENTIAL
-RESTRICTED
-```
-
-This is simple but gives the repo a governance story.
-
----
-
-## 15. CI/CD guidance
-
-Create three workflows.
-
-### terraform.yml
-
-Purpose:
-
-- run `terraform fmt`
-- run `terraform init`
-- run `terraform validate`
-- run `terraform plan`
-- apply only on protected branch/environment
-
-### dbt_platform.yml
-
-Purpose:
-
-- install dbt
-- create temporary dbt profile from GitHub Secrets
-- run `dbt deps`
-- run `dbt compile`
-- run `dbt build`
-
-### sql_lint.yml
-
-Purpose:
-
-- run SQLFluff against dbt models/macros/tests
-- enforce basic SQL discipline
-
-Keep workflows simple and understandable.
-
----
-
-## 16. GitHub Secrets to document
-
-Document these expected secrets:
-
-```text
-SNOWFLAKE_ACCOUNT
-SNOWFLAKE_ORGANIZATION_NAME
-SNOWFLAKE_ACCOUNT_NAME
-SNOWFLAKE_TERRAFORM_USER
-SNOWFLAKE_TERRAFORM_PASS
-DBT_PLATFORM_PASS
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-```
-
-If using key-pair auth later, add it as a future improvement. For version 1, password-based demo auth is acceptable if clearly marked as demo/simple setup.
-
----
-
-## 17. What not to include in version 1
-
-Do not include these yet:
-
-- AWS Glue ingestion framework
-- Iceberg table management
-- Kafka ingestion
-- full masking policy automation
-- complex data catalog
-- OpenMetadata/DataHub integration
-- Kubernetes
-- full multi-account Snowflake deployment
-- complicated data mesh ownership model
-
-Those can be roadmap items.
-
-Version 1 should be clean, finished, and explainable.
-
----
-
-## 18. Roadmap ideas
-
-After version 1, useful extensions include:
-
-### Version 2
-
-- masking policy demo
-- row access policy demo
-- more complete role hierarchy
-- query tag cost dashboard
-- Streamlit admin app for platform metadata
-
-### Version 3
-
-- AWS S3 ingestion landing zone
-- Snowpipe or external stage examples
-- Iceberg integration pattern
-- product onboarding automation
-
-### Version 4
-
-- data quality monitoring
-- metadata catalog integration
-- automated lineage documentation
-- cost anomaly detection
-
----
-
-## 19. How this supports the company idea
-
-This repository is commercially useful because it shows that your future company does not just sell time.
-
-It sells a repeatable platform foundation.
-
-The business story becomes:
-
-> We help growing companies move from spreadsheet/reporting chaos to a governed, reliable, extensible data platform foundation. We use a proven blueprint, then add business-specific data products on top.
-
-This is stronger than saying:
-
-> I provide data consulting.
-
-The repository becomes a proof asset for:
-
-- interviews
-- recruiters
-- clients
-- future consulting/productized service work
-- technical credibility
-- architecture storytelling
-
----
-
-## 20. Recommended Cloud Code / AI development instruction
-
-When you start building this in Cloud Code, use the following instruction:
-
-```text
-You are helping me build a new repository called Data-Platform-Demo.
-
-The goal is to create a self-contained blueprint for bootstrapping a small-company data platform using Snowflake, Terraform, dbt, GitHub Actions, and GitHub Codespaces.
-
-This repository should be similar in structure and clarity to my existing Data-Product-Demo repository, but the purpose is different:
-
-- Data-Product-Demo demonstrates one business-facing data product.
-- Data-Platform-Demo demonstrates the shared data platform foundation that future data products can use.
-
-Important boundary:
-
-- Platform-level infrastructure belongs in this repository.
-- Data-product-specific infrastructure belongs in each data product repository.
-
-Build the repository incrementally.
-
-Start with the skeleton, documentation, Terraform structure, dbt platform project structure, and CI/CD placeholders. Do not over-engineer. The repository should be easy to understand, easy to run, and suitable as a professional portfolio/demo asset.
-
-Use these main folders:
-
-- .devcontainer/
-- .github/workflows/
-- TERRAFORM/
-- DBT/data_platform_demo/
-- docs/
-- profiles/
-
-The first infrastructure scope should include:
-
-- Snowflake platform database
-- schemas: CONFIG, GOVERNANCE, OBSERVABILITY, AUDIT, UTILS
-- warehouses: PLATFORM_TRANSFORM_WH and PLATFORM_ADMIN_WH
-- resource monitor
-- platform roles
-- dbt platform service user
-- basic grants
-- environment-specific tfvars for dev and prod
-
-The first dbt scope should include:
-
-- schema naming macro
-- query tagging macro
-- audit column macro
-- governance seed/model examples
-- observability views
-- data product registry seed/model
-- basic tests
-
-Keep the code clean, explicit, and professional. Prefer descriptive variable names over abbreviations. Do not add fake enterprise complexity.
-```
-
----
-
-## 21. Final recommendation
-
-Create `Data-Platform-Demo` as a clean, deployable platform foundation repository.
-
-Use the `Data-Product-Demo` as the style and delivery reference.
-
-Use the `Data-Platform-Framework` as the source of reusable dbt standards and macro ideas.
-
-Do not merge all ideas into one giant repository.
-
-The clean story should be:
-
-```text
-Data-Platform-Demo  -> creates the shared foundation
-Data-Product-Demo   -> demonstrates one product built on that foundation
-Framework utilities -> standardise how dbt products are built
-```
-
-This is the right architecture story for your future company idea.
+> reusable, production-minded data platform and data product blueprints for small organisations.
