@@ -178,13 +178,12 @@ This is the most important design rule.
 The platform repository should create:
 
 - Terraform remote state backend
-- shared AWS account/platform baseline
-- shared storage zones
-- shared IAM roles and policies
-- shared logging and monitoring baseline
-- shared secrets structure
-- CI/CD deployment roles
-- optional networking foundation
+- VPC networking baseline
+- shared platform S3 storage
+- IAM roles
+- logging baseline
+- Secrets Manager baseline
+- CI/CD deployment role
 - outputs that product repositories can consume
 
 ### Data Product Demo owns product-specific infrastructure
@@ -215,7 +214,28 @@ For version 1, keep it small, clean, and professional.
 
 Do not overbuild.
 
-The platform demo should create the following core infrastructure.
+The platform demo should create only the locked V1 infrastructure defined in `docs/adr/0001-v1-platform-architecture.md`.
+
+V1 includes only:
+
+- Terraform remote state backend
+- VPC networking baseline
+- Shared platform S3 storage
+- IAM roles
+- Logging baseline
+- Secrets Manager baseline
+- CI/CD deployment role
+
+V1 explicitly excludes:
+
+- Snowflake provisioning
+- dbt models
+- Streamlit apps
+- Kafka
+- Kubernetes
+- Data pipelines
+- Product-specific infrastructure
+- Business dashboards
 
 ---
 
@@ -264,7 +284,6 @@ Recommended buckets:
 
 ```text
 data-platform-demo-raw-<environment>-<account-suffix>
-data-platform-demo-refined-<environment>-<account-suffix>
 data-platform-demo-artifacts-<environment>-<account-suffix>
 data-platform-demo-logs-<environment>-<account-suffix>
 ```
@@ -272,7 +291,6 @@ data-platform-demo-logs-<environment>-<account-suffix>
 Recommended zones:
 
 - `raw`: immutable source-aligned landing data
-- `refined`: cleaned/restructured files available for product consumption
 - `artifacts`: deployment artifacts, scripts, packaged jobs
 - `logs`: platform and pipeline logs
 
@@ -302,8 +320,6 @@ Recommended roles:
 DataPlatformAdminRole
 DataPlatformCicdRole
 DataProductDeploymentRole
-DataProductReadOnlyRole
-SnowflakeExternalAccessRole
 ```
 
 Minimal responsibilities:
@@ -311,12 +327,10 @@ Minimal responsibilities:
 - `DataPlatformAdminRole`: admin-level platform operations, used carefully
 - `DataPlatformCicdRole`: GitHub Actions/Terraform deployment role
 - `DataProductDeploymentRole`: role that future product repos can assume for product-specific deployment
-- `DataProductReadOnlyRole`: read-only access for validation and demos
-- `SnowflakeExternalAccessRole`: IAM role Snowflake can use for external stages, Iceberg, or external volumes
 
 Important design note:
 
-The platform repo can create the shared IAM role for Snowflake integration, but product repos should create their own Snowflake stages, databases, schemas, and grants.
+The platform repo does not provision Snowflake in V1. Product repos should create their own Snowflake stages, databases, schemas, and grants.
 
 ---
 
@@ -329,7 +343,6 @@ Purpose:
 Recommended AWS Secrets Manager structure:
 
 ```text
-/data-platform-demo/dev/snowflake/terraform-user
 /data-platform-demo/dev/github/deployment
 /data-platform-demo/dev/shared/api-placeholder
 ```
@@ -353,9 +366,7 @@ Purpose:
 Recommended resources:
 
 - CloudWatch log groups
-- S3 access logging target or logging bucket
 - basic CloudWatch alarms where useful
-- optional SNS topic for platform alerts
 
 Minimal version:
 
@@ -369,35 +380,24 @@ This gives later Glue/Lambda/ingestion modules somewhere consistent to send logs
 
 ---
 
-### 5.6 Optional networking baseline
+### 5.6 VPC networking baseline
 
-This depends on how far you want the first version to go.
-
-For v1, I recommend keeping networking light.
-
-Reason:
-
-The first platform demo is likely AWS S3 + IAM + Snowflake-oriented. You do not need EC2, NAT gateways, or heavy private networking to prove the core pattern.
+V1 includes a minimal VPC networking baseline.
 
 Recommended v1 networking scope:
 
-- document networking assumptions
-- optionally create VPC only if future modules need it
-- avoid NAT gateways in demo to prevent cost surprises
+- VPC
+- public subnet
+- private subnet
+- internet gateway
+
+Do not include NAT gateways, private endpoints, multi-AZ complexity, or advanced networking in V1.
 
 Recommended future networking scope:
 
-- VPC
-- private subnets
 - VPC endpoints for S3, Secrets Manager, CloudWatch
 - security groups
 - route tables
-
-If you include networking in v1, make it optional through a variable:
-
-```text
-enable_networking = true / false
-```
 
 ---
 
@@ -435,12 +435,10 @@ Future product repositories need stable outputs to consume.
 Recommended outputs:
 
 - raw bucket name
-- refined bucket name
 - artifacts bucket name
 - logs bucket name
 - CI/CD role ARN
 - product deployment role ARN
-- Snowflake external access role ARN
 - environment name
 - AWS region
 
@@ -598,7 +596,6 @@ terraform/modules/storage/
 It should create:
 
 - raw bucket
-- refined bucket
 - artifacts bucket
 - logs bucket
 - bucket policies
@@ -615,10 +612,9 @@ terraform/modules/iam/
 
 It should create:
 
+- platform admin role
 - platform CI/CD role
 - product deployment role
-- read-only role
-- Snowflake external access role placeholder
 
 ### Stage 5 — Logging module
 
@@ -631,7 +627,7 @@ terraform/modules/logging/
 It should create:
 
 - CloudWatch log groups
-- optional SNS topic
+- basic metric alarms
 - naming convention for future logs
 
 ### Stage 6 — Secrets module
@@ -658,15 +654,15 @@ terraform/environments/dev/
 
 This composes:
 
+- networking module
 - storage module
 - iam module
 - logging module
 - secrets module
-- optional networking module
 
 ### Stage 8 — CI/CD
 
-Add GitHub Actions:
+Document deployment role usage for:
 
 - format
 - validate
@@ -690,12 +686,12 @@ For v1, build only this:
 
 ```text
 Terraform backend
-Shared S3 data lake buckets
+VPC networking baseline
+Shared platform S3 storage
 IAM roles
 Secrets Manager placeholders
 CloudWatch log groups
-GitHub Actions Terraform CI
-Documentation
+CI/CD deployment role
 ```
 
 Do not build yet:
@@ -705,8 +701,8 @@ Do not build yet:
 - Step Functions
 - ECS
 - EKS
-- full VPC networking
-- Snowflake databases
+- advanced networking
+- Snowflake provisioning
 - dbt projects
 - Streamlit apps
 
@@ -749,7 +745,6 @@ Examples:
 
 ```text
 data-platform-demo-raw-dev-123456789012
-data-platform-demo-refined-dev-123456789012
 data-platform-demo-artifacts-dev-123456789012
 data-platform-demo-logs-dev-123456789012
 ```

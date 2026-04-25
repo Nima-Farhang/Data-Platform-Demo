@@ -49,8 +49,8 @@ Creates product-specific Snowflake, dbt, and Streamlit resources
 - IAM roles and policies
 - logging baseline
 - secrets baseline
-- CI/CD deployment foundation
-- optional networking foundation
+- CI/CD deployment role
+- VPC networking baseline
 
 ### Data Product Demo owns
 
@@ -108,6 +108,18 @@ GitHub Repository
 
 The first version of this repository should build a minimal but professional platform foundation.
 
+V1 is locked to shared platform infrastructure only. It includes only:
+
+- Terraform remote state backend
+- VPC networking baseline
+- Shared platform S3 storage
+- IAM roles
+- Logging baseline
+- Secrets Manager baseline
+- CI/CD deployment role
+
+V1 explicitly excludes Snowflake provisioning, dbt models, Streamlit apps, Kafka, Kubernetes, data pipelines, product-specific infrastructure, and business dashboards.
+
 ### 1. Terraform Backend
 
 Creates:
@@ -123,7 +135,6 @@ Creates:
 Creates standard platform buckets such as:
 
 - raw landing bucket
-- refined data bucket
 - artifacts bucket
 - logs bucket
 
@@ -136,8 +147,6 @@ Creates role patterns for:
 - platform administration
 - GitHub Actions / CI/CD deployment
 - product deployment
-- read-only validation
-- Snowflake external access
 
 ### 4. Secrets Baseline
 
@@ -149,17 +158,18 @@ Secret values should not be committed to source control.
 
 Creates baseline log groups and optional alerting structures for future platform workloads.
 
-### 6. Optional Networking
+### 6. VPC Networking Baseline
 
-Networking should be kept minimal in the first version unless required.
+Networking should be kept minimal in the first version.
 
-Future versions may add:
+V1 creates:
 
 - VPC
+- public subnet
 - private subnets
-- VPC endpoints
-- security groups
-- route tables
+- internet gateway
+
+Future versions may add private endpoints, NAT Gateway, multi-AZ networking, security groups, and route tables where required.
 
 ---
 
@@ -238,12 +248,14 @@ Do not start with every possible cloud service. Keep version 1 small and reliabl
 
 This repository should not create:
 
+- Snowflake provisioning
 - dbt models
 - Streamlit apps
-- business-specific Snowflake databases
-- product-specific schemas
-- product-specific warehouses
-- business-specific ingestion pipelines
+- Kafka
+- Kubernetes
+- data pipelines
+- product-specific infrastructure
+- business dashboards
 
 Those belong in the relevant data product repository.
 

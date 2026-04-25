@@ -14,7 +14,7 @@ Read README.md
 
 Familiarize yourself with the project Purpose and Structure
 
-Read docs/architecture-v1.md carefully.
+Read docs/architecture.md carefully.
 
 Do not write Terraform code yet.
 

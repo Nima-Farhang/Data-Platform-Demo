@@ -40,13 +40,40 @@ Shared Platform Infrastructure
 
 V1 includes only the following platform components:
 
-1. Terraform remote state
-2. Networking
-3. Platform storage
-4. Identity and access management
-5. Logging and monitoring
-6. Secrets management
-7. Environment wiring
+1. Terraform remote state backend
+2. VPC networking baseline
+3. Shared platform S3 storage
+4. IAM roles
+5. Logging baseline
+6. Secrets Manager baseline
+7. CI/CD deployment role
+
+## V1 Platform Scope (Locked)
+
+V1 is limited to the shared platform foundation needed before data product repositories are deployed.
+
+V1 must include only:
+
+- Terraform remote state backend
+- VPC networking baseline
+- Shared platform S3 storage
+- IAM roles
+- Logging baseline
+- Secrets Manager baseline
+- CI/CD deployment role
+
+V1 must explicitly exclude:
+
+- Snowflake provisioning
+- dbt models
+- Streamlit apps
+- Kafka
+- Kubernetes
+- Data pipelines
+- Product-specific infrastructure
+- Business dashboards
+
+Do not add new V1 technical components unless this architecture decision is updated.
 
 ## Component Summary
 
@@ -73,7 +100,7 @@ It includes:
 - private subnet
 - internet gateway
 
-V1 does not include NAT Gateway, private endpoints, or multi-AZ complexity unless a later requirement makes them necessary.
+V1 does not include NAT Gateway, private endpoints, or multi-AZ complexity.
 
 ### Platform Storage
 
@@ -87,7 +114,7 @@ It includes:
 
 Each bucket must use encryption, versioning, lifecycle rules, and public access blocking.
 
-### Identity and Access Management
+### IAM Roles
 
 IAM provides role-based access for platform administration, deployment automation, and future product deployment.
 
@@ -99,24 +126,24 @@ It includes:
 
 IAM must follow least privilege and avoid hardcoded users.
 
-### Logging and Monitoring
+### Logging Baseline
 
-Logging and monitoring provide baseline observability for platform resources.
+The logging baseline provides basic observability for platform resources.
 
 It includes:
 
 - CloudWatch Log Groups
 - basic metric alarms
 
-### Secrets Management
+### Secrets Manager Baseline
 
-Secrets management provides a safe structure for future credentials and tokens.
+The Secrets Manager baseline provides a safe structure for future credentials and tokens.
 
 It includes AWS Secrets Manager placeholders only. Real credentials must not be committed to source control.
 
 ### Environment Wiring
 
-Environment wiring composes shared modules into deployable environments.
+Environment wiring composes the locked V1 components into deployable environments. It is deployment structure, not an additional platform component.
 
 The platform supports:
 
@@ -184,15 +211,13 @@ terraform apply
 V1 does not include:
 
 - Snowflake provisioning
-- Kafka infrastructure
-- Kubernetes clusters
-- data warehouse configuration
-- streaming platforms
-- data pipelines
 - dbt models
 - Streamlit apps
-- product-specific storage
-- business logic
+- Kafka
+- Kubernetes
+- data pipelines
+- product-specific infrastructure
+- business dashboards
 
 Those belong to later platform phases or separate data product repositories.
 

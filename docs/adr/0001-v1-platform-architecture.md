@@ -35,14 +35,28 @@ Not feature-rich.
 
 This platform builds **shared infrastructure only**.
 
-It does NOT build:
+## V1 Platform Scope (Locked)
 
-- Data pipelines
+V1 must include only:
+
+- Terraform remote state backend
+- VPC networking baseline
+- Shared platform S3 storage
+- IAM roles
+- Logging baseline
+- Secrets Manager baseline
+- CI/CD deployment role
+
+V1 must explicitly exclude:
+
+- Snowflake provisioning
 - dbt models
 - Streamlit apps
-- Product-specific storage
-- Snowflake databases
-- Business logic
+- Kafka
+- Kubernetes
+- Data pipelines
+- Product-specific infrastructure
+- Business dashboards
 
 Those belong in:
 
@@ -109,7 +123,7 @@ Those belong in:
 
 # Core Components
 
-## 1. Terraform Remote State
+## 1. Terraform Remote State Backend
 
 ### Resources
 
@@ -132,7 +146,7 @@ Provides:
 
 ---
 
-## 2. Networking (VPC)
+## 2. VPC Networking Baseline
 
 ### Resources
 
@@ -161,7 +175,7 @@ Keep minimal.
 
 ---
 
-## 3. Platform Storage
+## 3. Shared Platform S3 Storage
 
 ### Resources
 
@@ -189,7 +203,7 @@ Supports:
 
 ---
 
-## 4. Identity and Access Management
+## 4. IAM Roles
 
 ### Roles
 
@@ -224,7 +238,7 @@ Provides:
 
 ---
 
-## 6. Secrets Management
+## 6. Secrets Manager Baseline
 
 ### Resources
 
@@ -367,10 +381,13 @@ Never violate this order.
 V1 intentionally avoids:
 
 - Snowflake provisioning
-- Kafka infrastructure
-- Kubernetes clusters
-- Data warehouse configuration
-- Streaming platforms
+- dbt models
+- Streamlit apps
+- Kafka
+- Kubernetes
+- Data pipelines
+- Product-specific infrastructure
+- Business dashboards
 
 These belong in later phases.
 

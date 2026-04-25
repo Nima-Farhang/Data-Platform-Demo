@@ -18,6 +18,20 @@ Modules should be:
 
 Environment compositions should wire modules together. Modules should not own environment orchestration.
 
+## V1 Platform Scope
+
+V1 module boundaries are locked to:
+
+- Terraform remote state backend
+- VPC networking baseline
+- Shared platform S3 storage
+- IAM roles
+- Logging baseline
+- Secrets Manager baseline
+- CI/CD deployment role
+
+Modules must not introduce additional V1 technical components.
+
 ## Bootstrap Boundary
 
 The bootstrap layer owns Terraform remote state resources.
@@ -131,12 +145,13 @@ Outputs should avoid exposing unnecessary implementation details.
 
 Modules in this repository must not create:
 
+- Snowflake provisioning
 - dbt models
 - Streamlit apps
-- Snowflake databases
-- product-specific schemas
-- product-specific warehouses
-- product-specific pipelines
-- business-specific resources
+- Kafka
+- Kubernetes
+- data pipelines
+- product-specific infrastructure
+- business dashboards
 
 Those belong in data product repositories.
