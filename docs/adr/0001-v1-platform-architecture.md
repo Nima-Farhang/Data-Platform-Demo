@@ -1,5 +1,6 @@
-
 # Architecture V1 — Data Platform Demo
+
+> Historical planning document: `docs/architecture.md` is now the current architecture reference and single source of truth. This record is retained to preserve the original V1 platform decision context.
 
 ## Purpose
 
