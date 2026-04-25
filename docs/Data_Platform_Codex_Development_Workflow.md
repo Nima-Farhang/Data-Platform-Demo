@@ -61,6 +61,7 @@ docs/naming-conventions.md
 docs/security-model.md
 docs/environment-strategy.md
 docs/tagging-strategy.md
+docs/module-boundaries.md
 
 Do not generate infrastructure code.
 
