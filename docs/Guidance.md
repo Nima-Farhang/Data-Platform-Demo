@@ -8,9 +8,9 @@ The new repository should be called:
 data-platform-demo
 ```
 
-Its purpose is to demonstrate a reusable, self-contained **data platform bootstrap blueprint**.
+Its purpose is to demonstrate a reusable, self-contained **Data Platform Demo** bootstrap blueprint.
 
-This repository is not a single business data product. It is the platform foundation that allows future data product repositories to be deployed safely and consistently.
+This repository is not a single business data product. It provides shared platform infrastructure that allows future data product repositories to be deployed safely and consistently.
 
 The intended positioning is:
 
@@ -48,13 +48,13 @@ Repository
 └── .devcontainer/   Developer environment
 ```
 
-### Important lesson for the new platform repository
+### Important lesson for Data Platform Demo
 
 The Data Product Demo proves the pattern of:
 
 > One repository = one deployable unit with infrastructure, automation, and documentation.
 
-The new `Data Platform Demo` should follow the same principle, but at the platform layer instead of the product layer.
+Data Platform Demo should follow the same principle, but for shared platform infrastructure instead of product-specific infrastructure.
 
 ---
 
@@ -157,7 +157,7 @@ Main gaps:
 
 5. **No CI/CD workflows yet**
 
-   The Data Product Demo has useful GitHub Actions. The new platform repository should include Terraform validation and plan/apply workflows.
+   The Data Product Demo has useful GitHub Actions. Data Platform Demo should include Terraform validation and plan/apply workflows.
 
 6. **No clear environment model**
 
@@ -175,7 +175,7 @@ This is the most important design rule.
 
 ### Data Platform Demo owns shared platform infrastructure
 
-The platform repository should create:
+Data Platform Demo should create:
 
 - Terraform remote state backend
 - VPC networking baseline
@@ -184,15 +184,13 @@ The platform repository should create:
 - logging baseline
 - Secrets Manager baseline
 - CI/CD deployment role
-- outputs that product repositories can consume
+- outputs that data product repositories can consume
 
-### Data Product Demo owns product-specific infrastructure
+### Data product repository owns product-specific infrastructure
 
-The product repository should create:
+The data product repository should create:
 
-- product Snowflake database
-- product Snowflake schemas
-- product warehouse
+- product-specific Snowflake resources
 - product resource monitor
 - product service user
 - dbt project
@@ -214,7 +212,7 @@ For version 1, keep it small, clean, and professional.
 
 Do not overbuild.
 
-The platform demo should create only the locked V1 infrastructure defined in `docs/adr/0001-v1-platform-architecture.md`.
+Data Platform Demo should create only the locked V1 platform scope defined in `docs/adr/0001-v1-platform-architecture.md`.
 
 V1 includes only:
 
@@ -277,7 +275,7 @@ data-platform-demo-terraform-lock-dev
 
 Purpose:
 
-- Provide standard shared landing zones for future data products
+- Provide standard shared landing zones for future data product repositories
 - Demonstrate a clean lake-style platform foundation
 
 Recommended buckets:
@@ -292,7 +290,7 @@ Recommended zones:
 
 - `raw`: immutable source-aligned landing data
 - `artifacts`: deployment artifacts, scripts, packaged jobs
-- `logs`: platform and pipeline logs
+- `logs`: shared platform infrastructure logs
 
 For a demo, separate buckets make the architecture easier to understand. In production, this could also be implemented as one bucket with zone prefixes.
 
@@ -312,7 +310,7 @@ Purpose:
 
 - Demonstrate secure platform access patterns
 - Avoid using long-lived personal credentials
-- Prepare for CI/CD and product deployments
+- Prepare for CI/CD and data product repository deployments
 
 Recommended roles:
 
@@ -326,11 +324,11 @@ Minimal responsibilities:
 
 - `DataPlatformAdminRole`: admin-level platform operations, used carefully
 - `DataPlatformCicdRole`: GitHub Actions/Terraform deployment role
-- `DataProductDeploymentRole`: role that future product repos can assume for product-specific deployment
+- `DataProductDeploymentRole`: role that future data product repositories can assume for product-specific deployment
 
 Important design note:
 
-The platform repo does not provision Snowflake in V1. Product repos should create their own Snowflake stages, databases, schemas, and grants.
+Data Platform Demo does not provision product-specific Snowflake resources in V1. Data product repositories should create their own Snowflake stages, databases, schemas, and grants.
 
 ---
 
@@ -373,10 +371,10 @@ Minimal version:
 ```text
 /platform/data-platform-demo/dev
 /platform/data-platform-demo/dev/terraform
-/platform/data-platform-demo/dev/ingestion
+/platform/data-platform-demo/dev/shared
 ```
 
-This gives later Glue/Lambda/ingestion modules somewhere consistent to send logs.
+This gives shared platform infrastructure somewhere consistent to send logs.
 
 ---
 
@@ -430,7 +428,7 @@ Do not apply automatically to prod in the first demo.
 
 Purpose:
 
-Future product repositories need stable outputs to consume.
+Data product repositories need stable outputs to consume.
 
 Recommended outputs:
 
@@ -442,7 +440,7 @@ Recommended outputs:
 - environment name
 - AWS region
 
-These outputs are important because they become the contract between platform and product repositories.
+These outputs are important because they become the contract between Data Platform Demo and data product repositories.
 
 ---
 
@@ -706,28 +704,28 @@ Do not build yet:
 - dbt projects
 - Streamlit apps
 
-Those should come later or live in product repositories.
+Those should come later or live in data product repositories.
 
 ---
 
-## 10. How Data Product Demo should consume Data Platform Demo
+## 10. How a data product repository should consume Data Platform Demo
 
 The relationship should be:
 
 ```text
 Data Platform Demo
         ↓ provides shared platform outputs
-Data Product Demo
-        ↓ creates product-specific Snowflake/dbt/Streamlit resources
+Data product repository
+        ↓ creates product-specific infrastructure
 Business data product
 ```
 
 Example integration pattern:
 
 1. Data Platform Demo creates shared buckets and IAM roles.
-2. Data Product Demo receives platform outputs manually or via Terraform remote state.
-3. Data Product Demo creates its own Snowflake database, schemas, warehouse, and stages.
-4. Data Product Demo uses the platform-provided S3 locations for landing or external access.
+2. The data product repository receives platform outputs manually or via Terraform remote state.
+3. The data product repository creates its own product-specific Snowflake resources, dbt models, Streamlit apps, and business logic.
+4. The data product repository uses the platform-provided S3 locations for product-specific access patterns.
 
 ---
 
@@ -771,7 +769,7 @@ Avoid describing it as only a Terraform repo.
 
 Better wording:
 
-> Data Platform Demo is a self-contained blueprint for bootstrapping the shared AWS foundation required by future data product repositories.
+> Data Platform Demo is a self-contained blueprint for bootstrapping shared platform infrastructure required by future data product repositories.
 
 ---
 
@@ -783,15 +781,15 @@ The best path is:
 
 1. Keep the bootstrap concept.
 2. Move to a `terraform/bootstrap`, `terraform/modules`, `terraform/environments` structure.
-3. Build only shared platform infrastructure in this repo.
-4. Keep data-product-specific infrastructure in Data Product Demo.
+3. Build only shared platform infrastructure in Data Platform Demo.
+4. Keep product-specific infrastructure in the data product repository.
 5. Add strong documentation so this becomes a portfolio-grade platform blueprint.
 
 This will give you two complementary repositories:
 
 ```text
-Data Platform Demo  = shared platform foundation
-Data Product Demo   = product implementation on top of the platform
+Data Platform Demo        = shared platform infrastructure
+Data product repository   = product-specific infrastructure and business logic
 ```
 
 Together, they represent the company idea clearly:

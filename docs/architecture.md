@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Data Platform Demo is a reusable AWS-based platform foundation for future data product repositories.
+Data Platform Demo is a reusable AWS-based foundation for shared platform infrastructure.
 
-The V1 architecture is intentionally small. It creates the shared platform services needed before product teams add Snowflake, dbt, Streamlit, ingestion, or business-specific workloads.
+The V1 architecture is intentionally small. It creates the shared platform infrastructure needed before data product repositories add product-specific infrastructure.
 
 ## Design Goals
 
@@ -50,7 +50,7 @@ V1 includes only the following platform components:
 
 ## V1 Platform Scope (Locked)
 
-V1 is limited to the shared platform foundation needed before data product repositories are deployed.
+The V1 platform scope is limited to the shared platform infrastructure needed before data product repositories are deployed.
 
 V1 must include only:
 
@@ -74,6 +74,28 @@ V1 must explicitly exclude:
 - Business dashboards
 
 Do not add new V1 technical components unless this architecture decision is updated.
+
+## Platform vs Product Ownership
+
+Data Platform Demo owns shared platform infrastructure. Data product repositories own product-specific infrastructure.
+
+| Resource type | Owning repository |
+| --- | --- |
+| Terraform state backend | Data Platform Demo |
+| Shared VPC | Data Platform Demo |
+| Shared IAM roles | Data Platform Demo |
+| Shared platform S3 buckets | Data Platform Demo |
+| Logging baseline | Data Platform Demo |
+| Secrets Manager baseline | Data Platform Demo |
+| CI/CD deployment roles | Data Platform Demo |
+| Product-specific S3 buckets | Data product repository |
+| Product-specific Snowflake resources | Data product repository |
+| dbt projects/models | Data product repository |
+| Streamlit applications | Data product repository |
+| Business pipelines | Data product repository |
+| Product dashboards | Data product repository |
+| Product-specific alerts | Data product repository |
+| Business data contracts | Data product repository |
 
 ## Component Summary
 
@@ -104,7 +126,7 @@ V1 does not include NAT Gateway, private endpoints, or multi-AZ complexity.
 
 ### Platform Storage
 
-Storage provides shared S3 locations for future platform and product use.
+Storage provides shared platform S3 locations for data product repositories to consume.
 
 It includes:
 
@@ -116,7 +138,7 @@ Each bucket must use encryption, versioning, lifecycle rules, and public access 
 
 ### IAM Roles
 
-IAM provides role-based access for platform administration, deployment automation, and future product deployment.
+IAM provides role-based access for platform administration, deployment automation, and data product repository deployment.
 
 It includes:
 
@@ -219,7 +241,7 @@ V1 does not include:
 - product-specific infrastructure
 - business dashboards
 
-Those belong to later platform phases or separate data product repositories.
+Those belong to data product repositories or later post-V1 decisions.
 
 ## Completion Criteria
 

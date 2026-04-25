@@ -2,11 +2,11 @@
 
 ## Overview
 
-**Data Platform Demo** is a self-contained blueprint for bootstrapping a reusable AWS-based data platform foundation.
+**Data Platform Demo** is a self-contained blueprint for bootstrapping reusable AWS-based shared platform infrastructure.
 
-It is designed to support future data product repositories such as **Data Product Demo** by providing shared platform infrastructure, security boundaries, storage zones, deployment roles, and operational foundations.
+It is designed to support future data product repositories by providing shared platform infrastructure, security boundaries, storage zones, deployment roles, and operational foundations.
 
-This repository is intentionally focused on the **platform layer**, not business-specific data products.
+This repository is intentionally focused on **shared platform infrastructure**, not product-specific infrastructure.
 
 ---
 
@@ -27,18 +27,18 @@ This project demonstrates how to create that foundation using production-minded 
 
 ---
 
-## Relationship to Data Product Demo
+## Relationship to Data Product Repositories
 
-This repository is designed to work alongside a separate data product repository.
+Data Platform Demo is designed to work alongside a separate data product repository.
 
 ```text
 Data Platform Demo
         ↓
 Creates shared platform infrastructure
         ↓
-Data Product Demo
+Data product repository
         ↓
-Creates product-specific Snowflake, dbt, and Streamlit resources
+Creates product-specific infrastructure
 ```
 
 ### Data Platform Demo owns
@@ -52,11 +52,9 @@ Creates product-specific Snowflake, dbt, and Streamlit resources
 - CI/CD deployment role
 - VPC networking baseline
 
-### Data Product Demo owns
+### Data product repository owns
 
-- product-specific Snowflake database
-- product-specific Snowflake schemas
-- product-specific warehouse
+- product-specific Snowflake resources
 - dbt models
 - Streamlit apps
 - product-specific CI/CD
@@ -64,7 +62,7 @@ Creates product-specific Snowflake, dbt, and Streamlit resources
 
 The guiding rule is:
 
-> Shared infrastructure belongs in the platform repo. Business-product infrastructure belongs in the product repo.
+> Shared platform infrastructure belongs in Data Platform Demo. Product-specific infrastructure belongs in the data product repository.
 
 ---
 
@@ -106,9 +104,9 @@ GitHub Repository
 
 ## Core Infrastructure
 
-The first version of this repository should build a minimal but professional platform foundation.
+The first version of this repository should build a minimal but professional shared platform infrastructure foundation.
 
-V1 is locked to shared platform infrastructure only. It includes only:
+The V1 platform scope is locked to shared platform infrastructure only. It includes only:
 
 - Terraform remote state backend
 - VPC networking baseline
@@ -138,7 +136,7 @@ Creates standard platform buckets such as:
 - artifacts bucket
 - logs bucket
 
-These are shared platform resources that future data products can use.
+These are shared platform infrastructure resources that future data product repositories can use.
 
 ### 3. IAM Roles and Policies
 
@@ -156,7 +154,7 @@ Secret values should not be committed to source control.
 
 ### 5. Logging Baseline
 
-Creates baseline log groups and optional alerting structures for future platform workloads.
+Creates baseline log groups and optional alerting structures for shared platform infrastructure.
 
 ### 6. VPC Networking Baseline
 
@@ -169,7 +167,7 @@ V1 creates:
 - private subnets
 - internet gateway
 
-Future versions may add private endpoints, NAT Gateway, multi-AZ networking, security groups, and route tables where required.
+Post-V1 versions may expand the networking baseline only when a clear product or platform requirement exists.
 
 ---
 
@@ -267,36 +265,17 @@ Those belong in the relevant data product repository.
 1. Bootstrap Terraform backend
 2. Deploy shared platform infrastructure
 3. Export platform outputs
-4. Product repository consumes outputs
-5. Product repository deploys business-specific infrastructure and workloads
+4. Data product repository consumes outputs
+5. Data product repository deploys product-specific infrastructure
 ```
 
 ---
 
-## Intended Use Cases
+## Future Expansion (Post-V1)
 
-This repository can be used as:
+Post-V1 work may add integrations around the deployed platform foundation.
 
-- a platform engineering portfolio project
-- a reusable consulting/company delivery blueprint
-- a reference implementation for small-company data platforms
-- a foundation for future Snowflake, dbt, Streamlit, Glue, or Iceberg extensions
-
----
-
-## Long-Term Vision
-
-The long-term vision is to create a repeatable platform foundation that can support multiple product repositories.
-
-Future extensions may include:
-
-- Snowflake external volume integration
-- AWS Glue ingestion framework
-- Iceberg table support
-- metadata/catalog integration
-- cost monitoring
-- data quality monitoring
-- platform observability dashboards
+Those additions should be documented in a later architecture decision before any new technical components are introduced.
 
 ---
 

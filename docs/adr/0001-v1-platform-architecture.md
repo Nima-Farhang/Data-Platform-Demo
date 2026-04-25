@@ -1,10 +1,10 @@
 # Architecture V1 — Data Platform Demo
 
-> Historical planning document: `docs/architecture.md` is now the current architecture reference and single source of truth. This record is retained to preserve the original V1 platform decision context.
+> Architecture decision record: this document defines the locked V1 platform scope. `docs/architecture.md` should reflect this decision.
 
 ## Purpose
 
-This document defines the **minimal viable platform architecture (V1)** for the Data Platform Demo repository.
+This document defines the **minimal viable platform architecture (V1)** for Data Platform Demo.
 
 This is not the final architecture.
 
@@ -13,7 +13,7 @@ This is the **first stable foundation** that:
 - Can be deployed safely
 - Can be extended later
 - Remains cost-efficient
-- Supports multiple future data products
+- Supports multiple future data product repositories
 
 ---
 
@@ -33,7 +33,7 @@ Not feature-rich.
 
 # Platform Boundary Definition
 
-This platform builds **shared infrastructure only**.
+Data Platform Demo builds **shared platform infrastructure only**.
 
 ## V1 Platform Scope (Locked)
 
@@ -58,9 +58,7 @@ V1 must explicitly exclude:
 - Product-specific infrastructure
 - Business dashboards
 
-Those belong in:
-
-**Data Product repositories**
+Those belong in data product repositories.
 
 ---
 
@@ -167,7 +165,7 @@ Creates:
 
 Do NOT include:
 
-- NAT Gateway (unless required)
+- NAT Gateway
 - Multi-AZ complexity
 - Private endpoints
 
@@ -323,11 +321,7 @@ V1 Security includes:
 - No public storage
 - No exposed secrets
 
-Future versions may add:
-
-- KMS customization
-- Private endpoints
-- Network ACL rules
+Post-V1 security additions should be documented in a later architecture decision before they are added.
 
 ---
 
@@ -393,21 +387,11 @@ These belong in later phases.
 
 ---
 
-# Future Expansion Path
+# Future Expansion (Post-V1)
 
-V2 may introduce:
+Post-V1 work may add integrations around the deployed platform foundation.
 
-- Data Warehouse Module
-- Streaming Platform
-- Metadata Services
-- Data Catalog
-- Cost Monitoring
-
-V3 may introduce:
-
-- Multi-account deployment
-- Private networking
-- Advanced security layers
+Any new technical components must be documented in a later architecture decision before implementation.
 
 ---
 
@@ -425,7 +409,7 @@ V1 platform is complete when:
 
 Only then move to:
 
-Data Product integration.
+data product repository integration.
 
 ---
 

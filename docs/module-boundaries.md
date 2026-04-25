@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Module boundaries define what each Terraform module is responsible for when infrastructure code is added later.
+Module boundaries define what each Terraform module is responsible for when shared platform infrastructure code is added later.
 
 This document describes boundaries only. It does not define or generate infrastructure code.
 
@@ -14,13 +14,13 @@ Modules should be:
 - reusable across environments
 - independent where practical
 - explicit about inputs and outputs
-- free of business-specific assumptions
+- free of product-specific assumptions
 
 Environment compositions should wire modules together. Modules should not own environment orchestration.
 
 ## V1 Platform Scope
 
-V1 module boundaries are locked to:
+V1 platform scope module boundaries are locked to:
 
 - Terraform remote state backend
 - VPC networking baseline
@@ -73,7 +73,7 @@ It is responsible for:
 - lifecycle rules
 - public access blocking
 
-It should not create product-specific buckets or product-specific data layouts.
+It should not create product-specific infrastructure, product-specific buckets, or product-specific data layouts.
 
 ## IAM Module Boundary
 
@@ -87,7 +87,7 @@ It is responsible for:
 - least-privilege role policies
 - role trust relationships
 
-It should not create hardcoded personal users or product-specific service users.
+It should not create hardcoded personal users, product-specific service users, or product-specific infrastructure.
 
 ## Logging Module Boundary
 
@@ -128,7 +128,7 @@ Environment compositions should not contain reusable module internals.
 
 ## Output Boundary
 
-Modules should expose only outputs that downstream modules or product repositories need.
+Modules should expose only outputs that downstream modules or data product repositories need.
 
 Examples include:
 
