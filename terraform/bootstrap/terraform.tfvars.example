@@ -1,3 +1,4 @@
 environment         = "dev"
 state_bucket_suffix = "replace-with-unique-suffix"
+aws_region  = "ap-south-east-2"
 
