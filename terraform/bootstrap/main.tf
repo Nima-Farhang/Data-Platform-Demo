@@ -1,15 +1,13 @@
 locals {
-  name_prefix       = "${var.project}-${var.environment}"
-  state_bucket_name = "${local.name_prefix}-terraform-state-${var.state_bucket_suffix}"
-  lock_table_name   = "${local.name_prefix}-terraform-locks"
+  state_bucket_name = "${var.project}-terraform-state-${var.state_bucket_suffix}"
+  lock_table_name   = "${var.project}-terraform-locks"
 
   common_tags = merge(
     {
-      Project     = "Data Platform Demo"
-      Environment = var.environment
-      Owner       = var.owner
-      CostCenter  = var.cost_center
-      ManagedBy   = "Terraform"
+      Project    = "Data Platform Demo"
+      Owner      = var.owner
+      CostCenter = var.cost_center
+      ManagedBy  = "Terraform"
     },
     var.additional_tags
   )

@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region where bootstrap resources will be created."
   type        = string
-  default = "ap-southeast-2"
+  default     = "ap-southeast-2"
 }
 
 variable "project" {
@@ -12,16 +12,6 @@ variable "project" {
   validation {
     condition     = can(regex("^[a-z0-9][a-z0-9-]*[a-z0-9]$", var.project))
     error_message = "Project must use lowercase letters, numbers, and hyphens only."
-  }
-}
-
-variable "environment" {
-  description = "Environment name used in bootstrap resource names."
-  type        = string
-
-  validation {
-    condition     = contains(["dev", "test", "prod"], var.environment)
-    error_message = "Environment must be one of: dev, test, prod."
   }
 }
 
