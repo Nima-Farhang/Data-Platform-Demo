@@ -1,4 +1,4 @@
-bucket         = "data-platform-terraform-state-replace-with-unique-suffix"
+bucket         = "data-platform-terraform-210006516097"
 key            = "environments/dev/terraform.tfstate"
 region         = "ap-southeast-2"
 dynamodb_table = "data-platform-terraform-locks"
