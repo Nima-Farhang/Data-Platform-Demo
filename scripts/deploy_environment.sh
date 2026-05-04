@@ -15,8 +15,10 @@ fi
 # Resolve paths from the script location so the command can be run from anywhere
 # inside or outside the repository.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ENVIRONMENT_DIR="${REPO_ROOT}/terraform/environments/${ENVIRONMENT_NAME}"
-BACKEND_CONFIG="${ENVIRONMENT_DIR}/backend.hcl"
+TERRAFORM_DIR="${REPO_ROOT}/terraform"
+ENVIRONMENT_DIR="${TERRAFORM_DIR}/environments/${ENVIRONMENT_NAME}"
+BACKEND_CONFIG="${ENVIRONMENT_DIR}/backend-${ENVIRONMENT_NAME}.hcl"
+TFVAR_FILE="${ENVIRONMENT_DIR}/${ENVIRONMENT_NAME}.tfvars"
 
 # Confirm the requested Terraform environment exists.
 if [[ ! -d "${ENVIRONMENT_DIR}" ]]; then
@@ -30,18 +32,24 @@ if [[ ! -f "${BACKEND_CONFIG}" ]]; then
   exit 1
 fi
 
+# Confirm the tfvar exists for remote state.
+if [[ ! -f "${TFVAR_FILE}" ]]; then
+  echo "Terraform backend config not found: ${TFVAR_FILE}"
+  exit 1
+fi
+
 # Run Terraform from the selected environment root.
-cd "${ENVIRONMENT_DIR}"
+cd "${TERRAFORM_DIR}"
 
 # Initialize Terraform using the environment-specific backend configuration.
-terraform init -backend-config="${BACKEND_CONFIG}"
+terraform init -reconfigure -backend-config="${BACKEND_CONFIG}"
 
 # Format the environment Terraform files.
 terraform fmt
 
 # Show the proposed infrastructure changes before applying them.
-terraform plan
+terraform plan -var-file="${TFVAR_FILE}"
 
 # Apply the planned changes. Terraform will prompt for confirmation unless
 # auto-approve is added by a future CI/CD-specific wrapper.
-terraform apply
+terraform apply -var-file="${TFVAR_FILE}"
