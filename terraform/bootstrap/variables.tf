@@ -18,7 +18,7 @@ variable "project" {
 variable "state_bucket_suffix" {
   description = "Globally unique suffix for the Terraform state S3 bucket."
   type        = string
-  default = "210006516097"
+  default     = "210006516097"
 
   validation {
     condition     = can(regex("^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", var.state_bucket_suffix))
