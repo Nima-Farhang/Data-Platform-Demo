@@ -50,6 +50,17 @@ variable "availability_zone" {
   default     = null
 }
 
+variable "account_suffix" {
+  description = "Account-specific suffix used to make dev S3 bucket names globally unique."
+  type        = string
+  default     = "210006516097"
+
+  validation {
+    condition     = can(regex("^[0-9]{12}$", var.account_suffix))
+    error_message = "Account suffix must be a 12-digit AWS account ID."
+  }
+}
+
 variable "owner" {
   description = "Team or role responsible for dev platform resources."
   type        = string

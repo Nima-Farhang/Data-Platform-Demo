@@ -24,3 +24,14 @@ module "networking" {
   cost_center               = var.cost_center
   additional_tags           = var.additional_tags
 }
+
+module "storage" {
+  source = "./modules/storage"
+
+  project         = var.project
+  environment     = var.environment
+  account_suffix  = var.account_suffix
+  owner           = var.owner
+  cost_center     = var.cost_center
+  additional_tags = var.additional_tags
+}
