@@ -12,7 +12,7 @@ locals {
 }
 
 module "networking" {
-  source = "../../modules/networking"
+  source = "./modules/networking"
 
   project                   = var.project
   environment               = var.environment
