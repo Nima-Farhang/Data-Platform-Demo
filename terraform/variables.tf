@@ -78,3 +78,27 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "platform_admin_principal_arns" {
+  description = "AWS principal ARNs allowed to assume the Platform Admin role. Defaults to the current account root."
+  type        = list(string)
+  default     = []
+}
+
+variable "product_deployment_principal_arns" {
+  description = "AWS principal ARNs allowed to assume the Product Deployment role. Defaults to the current account root."
+  type        = list(string)
+  default     = []
+}
+
+variable "github_oidc_provider_arn" {
+  description = "Optional GitHub Actions OIDC provider ARN allowed to assume the CI/CD role."
+  type        = string
+  default     = null
+}
+
+variable "github_repository_subjects" {
+  description = "GitHub OIDC subject patterns allowed to assume the CI/CD role, for example repo:owner/repo:ref:refs/heads/main."
+  type        = list(string)
+  default     = []
+}

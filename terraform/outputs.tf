@@ -32,3 +32,18 @@ output "environment" {
   description = "Environment name for this platform deployment."
   value       = var.environment
 }
+
+output "platform_admin_role_arn" {
+  description = "ARN of the Platform Admin IAM role."
+  value       = module.iam.platform_admin_role_arn
+}
+
+output "cicd_role_arn" {
+  description = "ARN of the CI/CD Deployment IAM role."
+  value       = module.iam.cicd_role_arn
+}
+
+output "product_deployment_role_arn" {
+  description = "ARN of the Product Deployment IAM role."
+  value       = module.iam.product_deployment_role_arn
+}

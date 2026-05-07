@@ -35,3 +35,18 @@ module "storage" {
   cost_center     = var.cost_center
   additional_tags = var.additional_tags
 }
+
+module "iam" {
+  source = "./modules/iam"
+
+  project                           = var.project
+  environment                       = var.environment
+  platform_bucket_arns              = module.storage.bucket_arns
+  platform_admin_principal_arns     = var.platform_admin_principal_arns
+  product_deployment_principal_arns = var.product_deployment_principal_arns
+  github_oidc_provider_arn          = var.github_oidc_provider_arn
+  github_repository_subjects        = var.github_repository_subjects
+  owner                             = var.owner
+  cost_center                       = var.cost_center
+  additional_tags                   = var.additional_tags
+}
