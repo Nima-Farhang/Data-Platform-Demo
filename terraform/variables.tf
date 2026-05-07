@@ -21,8 +21,8 @@ variable "environment" {
   default     = "dev"
 
   validation {
-    condition     = var.environment == "dev"
-    error_message = "This environment root is only for dev."
+    condition     = contains(["dev", "test", "prod"], var.environment)
+    error_message = "Environment must be one of: dev, test, prod."
   }
 }
 
