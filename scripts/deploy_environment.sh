@@ -32,9 +32,9 @@ if [[ ! -f "${BACKEND_CONFIG}" ]]; then
   exit 1
 fi
 
-# Confirm the tfvar exists for remote state.
+# Confirm the tfvar exists for environment-specific inputs.
 if [[ ! -f "${TFVAR_FILE}" ]]; then
-  echo "Terraform backend config not found: ${TFVAR_FILE}"
+  echo "Terraform tfvars file not found: ${TFVAR_FILE}"
   exit 1
 fi
 
@@ -44,12 +44,19 @@ cd "${TERRAFORM_DIR}"
 # Initialize Terraform using the environment-specific backend configuration.
 terraform init -reconfigure -backend-config="${BACKEND_CONFIG}"
 
-# Format the environment Terraform files.
-terraform fmt
+# Format Terraform files.
+terraform fmt -recursive
+
+# Validate the composed platform configuration.
+terraform validate
 
 # Show the proposed infrastructure changes before applying them.
 terraform plan -var-file="${TFVAR_FILE}"
 
-# Apply the planned changes. Terraform will prompt for confirmation unless
-# auto-approve is added by a future CI/CD-specific wrapper.
-terraform apply -var-file="${TFVAR_FILE}"
+# Apply the planned changes. CI/CD sets APPLY_APPROVE=true after the workflow
+# has passed any required GitHub Environment approvals.
+if [[ "${APPLY_APPROVE:-false}" == "true" ]]; then
+  terraform apply -auto-approve -var-file="${TFVAR_FILE}"
+else
+  terraform apply -var-file="${TFVAR_FILE}"
+fi

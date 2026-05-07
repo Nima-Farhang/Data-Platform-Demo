@@ -174,11 +174,13 @@ Prompt:
 
 Create GitHub workflow:
 
+use /scripts/deploy_environment.sh for:
 terraform fmt
 terraform validate
 terraform plan
+terrafprm apply
 
-Manual approval required for apply.
+Manual approval required prod.
 
 ---
 

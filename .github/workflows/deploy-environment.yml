@@ -1,0 +1,50 @@
+name: Deploy Terraform Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Terraform environment to deploy"
+        required: true
+        type: choice
+        options:
+          - dev
+          - test
+          - prod
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    env:
+      APPLY_APPROVE: "true"
+      ENVIRONMENT: ${{ inputs.environment }}
+      TF_IN_AUTOMATION: "true"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-southeast-2
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+
+      - name: Terraform fmt, validate, plan, and apply
+        run: ./scripts/deploy_environment.sh "${ENVIRONMENT}"
