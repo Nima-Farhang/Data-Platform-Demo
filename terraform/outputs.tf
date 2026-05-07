@@ -47,3 +47,13 @@ output "product_deployment_role_arn" {
   description = "ARN of the Product Deployment IAM role."
   value       = module.iam.product_deployment_role_arn
 }
+
+output "placeholder_secret_name" {
+  description = "Name of the platform placeholder secret."
+  value       = module.secrets.placeholder_secret_name
+}
+
+output "placeholder_secret_arn" {
+  description = "ARN of the platform placeholder secret."
+  value       = module.secrets.placeholder_secret_arn
+}

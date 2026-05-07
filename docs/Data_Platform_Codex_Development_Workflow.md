@@ -161,11 +161,10 @@ Prompt:
 
 Wire modules into:
 
-terraform/environments/dev
 terraform/environments/test
 terraform/environments/prod
 
-Keep consistent configuration.
+Keep consistent configuration. with terraform/environments/dev
 
 ---
 
