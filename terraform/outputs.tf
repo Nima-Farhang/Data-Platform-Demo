@@ -48,6 +48,26 @@ output "product_deployment_role_arn" {
   value       = module.iam.product_deployment_role_arn
 }
 
+output "platform_kms_key_id" {
+  description = "KMS key ID for shared platform encryption."
+  value       = module.kms.key_id
+}
+
+output "platform_kms_key_arn" {
+  description = "KMS key ARN for shared platform encryption."
+  value       = module.kms.key_arn
+}
+
+output "platform_kms_alias_name" {
+  description = "KMS alias name for shared platform encryption."
+  value       = module.kms.alias_name
+}
+
+output "platform_kms_alias_arn" {
+  description = "KMS alias ARN for shared platform encryption."
+  value       = module.kms.alias_arn
+}
+
 output "placeholder_secret_name" {
   description = "Name of the platform placeholder secret."
   value       = module.secrets.placeholder_secret_name

@@ -51,6 +51,16 @@ module "iam" {
   additional_tags                   = var.additional_tags
 }
 
+module "kms" {
+  source = "./modules/kms"
+
+  project         = var.project
+  environment     = var.environment
+  owner           = var.owner
+  cost_center     = var.cost_center
+  additional_tags = var.additional_tags
+}
+
 module "secrets" {
   source = "./modules/secrets"
 
