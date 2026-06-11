@@ -23,6 +23,8 @@ and list their dependency order.
 
 Do not add components that are not listed.
 
+The next project should preserve the existing repository structure, naming conventions, module boundaries, and platform/product ownership rules. Only add new reusable platform modules that extend the current patterns without changing the established principles.
+
 ---
 
 # Phase 0 — Repository Skeleton

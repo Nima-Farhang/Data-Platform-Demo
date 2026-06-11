@@ -16,6 +16,8 @@ Modules should be:
 - explicit about inputs and outputs
 - free of product-specific assumptions
 
+New module development must follow these same boundary rules and preserve the existing reusable module patterns. Only add shared platform modules that respect the current platform/product separation and do not change the established architecture patterns.
+
 Environment compositions should wire modules together. Modules should not own environment orchestration.
 
 ## V1 Platform Scope

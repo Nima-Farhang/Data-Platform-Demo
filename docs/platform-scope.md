@@ -82,3 +82,4 @@ The platform repository should provide a secrets structure. A product repository
 New components should be added to the platform only when they are reusable across multiple products or required to operate the shared foundation.
 
 If a component exists for one business use case, it belongs outside this repository.
+Future module development should remain within these boundaries and extend the repository only through the same reusable module and environment wiring patterns already established.
