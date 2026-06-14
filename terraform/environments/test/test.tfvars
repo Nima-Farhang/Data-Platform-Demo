@@ -1,6 +1,7 @@
-aws_region  = "ap-southeast-2"
-project     = "data-platform"
-environment = "test"
+aws_region     = "ap-southeast-2"
+project        = "data-platform"
+environment    = "test"
+account_suffix = "210006516097"
 
 vpc_cidr_block            = "10.1.0.0/16"
 public_subnet_cidr_block  = "10.1.1.0/24"
