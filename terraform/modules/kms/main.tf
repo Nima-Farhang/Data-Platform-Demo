@@ -23,14 +23,14 @@ resource "aws_kms_key" "platform" {
   tags = merge(
     local.common_tags,
     {
-      Name    = "${local.name_prefix}-platform-kms"
+      Name    = "${local.name_prefix}-platform-kms-v1"
       Purpose = "platform-kms"
     }
   )
 }
 
 resource "aws_kms_alias" "platform" {
-  name          = "alias/${local.name_prefix}-platform-kms"
+  name          = "alias/${local.name_prefix}-platform-kms-v1"
   target_key_id = aws_kms_key.platform.key_id
 }
 
