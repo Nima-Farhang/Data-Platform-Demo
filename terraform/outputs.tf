@@ -108,6 +108,11 @@ output "product_deployment_role_arn" {
   value       = module.iam.product_deployment_role_arn
 }
 
+output "product_deployment_permission_boundary_policy_arn" {
+  description = "ARN of the reusable permission boundary policy for product deployment roles."
+  value       = module.iam.product_deployment_permission_boundary_policy_arn
+}
+
 output "platform_kms_key_id" {
   description = "KMS key ID for shared platform encryption."
   value       = module.kms.key_id

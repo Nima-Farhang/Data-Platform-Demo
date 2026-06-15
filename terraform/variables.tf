@@ -91,6 +91,17 @@ variable "product_deployment_principal_arns" {
   default     = []
 }
 
+variable "product_resource_name_prefix" {
+  description = "Name prefix that product-owned resources must use when controlled by the product deployment permission boundary. Defaults to <project>-<environment>-product-."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.product_resource_name_prefix == null || can(regex("^[a-zA-Z0-9][a-zA-Z0-9-_]*-$", var.product_resource_name_prefix))
+    error_message = "Product resource name prefix must start with an alphanumeric character, may contain letters, numbers, hyphens, and underscores, and must end with a hyphen."
+  }
+}
+
 variable "github_oidc_provider_arn" {
   description = "Optional externally managed GitHub Actions OIDC provider ARN allowed to assume the CI/CD role. Leave null when create_github_oidc_provider is true."
   type        = string

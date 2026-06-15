@@ -45,6 +45,7 @@ module "iam" {
   platform_bucket_arns              = module.storage.bucket_arns
   platform_admin_principal_arns     = var.platform_admin_principal_arns
   product_deployment_principal_arns = var.product_deployment_principal_arns
+  product_resource_name_prefix      = var.product_resource_name_prefix
   github_oidc_provider_arn          = var.github_oidc_provider_arn
   create_github_oidc_provider       = var.create_github_oidc_provider
   github_oidc_thumbprint_list       = var.github_oidc_thumbprint_list

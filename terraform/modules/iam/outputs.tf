@@ -28,6 +28,11 @@ output "product_deployment_role_arn" {
   value       = aws_iam_role.product_deployment.arn
 }
 
+output "product_deployment_permission_boundary_policy_arn" {
+  description = "ARN of the reusable permission boundary policy for product deployment roles."
+  value       = aws_iam_policy.product_deployment_permission_boundary.arn
+}
+
 output "github_oidc_provider_arn" {
   description = "ARN of the GitHub Actions OIDC provider used by the CI/CD role, when configured."
   value       = local.github_oidc_provider_arn
