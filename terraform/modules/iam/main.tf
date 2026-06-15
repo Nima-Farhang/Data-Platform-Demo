@@ -329,83 +329,44 @@ data "aws_iam_policy_document" "cicd" {
 
 data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   statement {
-    sid    = "AllowProductLambdaManagement"
+    sid    = "AllowProductComputeAndEvents"
     effect = "Allow"
     actions = [
+      "events:*Rule",
+      "events:*Targets*",
+      "events:DescribeRule",
+      "events:ListTargetsByRule",
+      "events:TagResource",
+      "events:UntagResource",
+      "glue:*Job*",
+      "glue:StartJobRun",
+      "glue:TagResource",
+      "glue:UntagResource",
+      "lambda:*Function*",
+      "lambda:*Alias",
       "lambda:AddPermission",
-      "lambda:CreateAlias",
-      "lambda:CreateFunction",
-      "lambda:DeleteAlias",
-      "lambda:DeleteFunction",
-      "lambda:GetFunction",
-      "lambda:GetFunctionConfiguration",
-      "lambda:ListAliases",
-      "lambda:ListTags",
-      "lambda:ListVersionsByFunction",
+      "lambda:GetFunction*",
+      "lambda:List*",
       "lambda:PublishVersion",
       "lambda:RemovePermission",
       "lambda:TagResource",
-      "lambda:UntagResource",
-      "lambda:UpdateAlias",
-      "lambda:UpdateFunctionCode",
-      "lambda:UpdateFunctionConfiguration"
+      "lambda:UntagResource"
     ]
     resources = [
+      "arn:aws:events:${local.region}:${local.account_id}:rule/${local.product_resource_name_prefix}*",
+      "arn:aws:events:${local.region}:${local.account_id}:rule/*/${local.product_resource_name_prefix}*",
+      "arn:aws:glue:${local.region}:${local.account_id}:job/${local.product_resource_name_prefix}*",
       "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.product_resource_name_prefix}*"
     ]
   }
 
   statement {
-    sid    = "AllowProductGlueJobManagement"
+    sid    = "AllowProductLogs"
     effect = "Allow"
     actions = [
-      "glue:CreateJob",
-      "glue:DeleteJob",
-      "glue:GetJob",
-      "glue:GetJobRun",
-      "glue:GetJobRuns",
-      "glue:GetJobs",
-      "glue:StartJobRun",
-      "glue:TagResource",
-      "glue:UntagResource",
-      "glue:UpdateJob"
-    ]
-    resources = [
-      "arn:aws:glue:${local.region}:${local.account_id}:job/${local.product_resource_name_prefix}*"
-    ]
-  }
-
-  statement {
-    sid    = "AllowProductEventBridgeRuleManagement"
-    effect = "Allow"
-    actions = [
-      "events:DeleteRule",
-      "events:DescribeRule",
-      "events:DisableRule",
-      "events:EnableRule",
-      "events:ListTargetsByRule",
-      "events:PutRule",
-      "events:PutTargets",
-      "events:RemoveTargets",
-      "events:TagResource",
-      "events:UntagResource"
-    ]
-    resources = [
-      "arn:aws:events:${local.region}:${local.account_id}:rule/${local.product_resource_name_prefix}*",
-      "arn:aws:events:${local.region}:${local.account_id}:rule/*/${local.product_resource_name_prefix}*"
-    ]
-  }
-
-  statement {
-    sid    = "AllowProductLogGroupManagement"
-    effect = "Allow"
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:DeleteLogGroup",
-      "logs:DeleteLogStream",
-      "logs:DescribeLogGroups",
-      "logs:DescribeLogStreams",
+      "logs:*LogGroup",
+      "logs:*LogStream",
+      "logs:Describe*",
       "logs:PutLogEvents",
       "logs:PutRetentionPolicy",
       "logs:TagLogGroup",
@@ -422,11 +383,9 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "AllowTaggedProductApiGatewayCreate"
-    effect = "Allow"
-    actions = [
-      "apigateway:POST"
-    ]
+    sid     = "AllowTaggedProductApiGatewayCreate"
+    effect  = "Allow"
+    actions = ["apigateway:POST"]
     resources = [
       "arn:aws:apigateway:${local.region}::/apis",
       "arn:aws:apigateway:${local.region}::/restapis"
@@ -436,12 +395,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
       test     = "StringEquals"
       variable = "aws:RequestTag/${local.product_permission_boundary_tag_key}"
       values   = [local.product_permission_boundary_tag_value]
-    }
-
-    condition {
-      test     = "ForAllValues:StringEquals"
-      variable = "aws:TagKeys"
-      values   = local.product_permission_boundary_allowed_tagkeys
     }
   }
 
@@ -471,54 +424,28 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "AllowProductIamRoleManagement"
+    sid    = "AllowProductIamRoles"
     effect = "Allow"
     actions = [
       "iam:CreateRole",
       "iam:DeleteRole",
       "iam:DeleteRolePolicy",
-      "iam:GetRole",
-      "iam:GetRolePolicy",
+      "iam:GetRole*",
       "iam:ListRolePolicies",
       "iam:PutRolePermissionsBoundary",
       "iam:PutRolePolicy",
       "iam:TagRole",
       "iam:UntagRole",
-      "iam:UpdateRole",
-      "iam:UpdateRoleDescription"
+      "iam:UpdateRole*"
     ]
-    resources = [
-      "arn:aws:iam::${local.account_id}:role/${local.product_resource_name_prefix}*"
-    ]
+    resources = ["arn:aws:iam::${local.account_id}:role/${local.product_resource_name_prefix}*"]
   }
 
   statement {
-    sid    = "RequireBoundaryOnProductRoleCreation"
-    effect = "Deny"
-    actions = [
-      "iam:CreateRole",
-      "iam:PutRolePermissionsBoundary"
-    ]
-    resources = [
-      "arn:aws:iam::${local.account_id}:role/${local.product_resource_name_prefix}*"
-    ]
-
-    condition {
-      test     = "StringNotEquals"
-      variable = "iam:PermissionsBoundary"
-      values   = [local.product_permission_boundary_policy_arn]
-    }
-  }
-
-  statement {
-    sid    = "AllowPassingProductRolesToApprovedServices"
-    effect = "Allow"
-    actions = [
-      "iam:PassRole"
-    ]
-    resources = [
-      "arn:aws:iam::${local.account_id}:role/${local.product_resource_name_prefix}*"
-    ]
+    sid       = "AllowPassingProductRoles"
+    effect    = "Allow"
+    actions   = ["iam:PassRole"]
+    resources = ["arn:aws:iam::${local.account_id}:role/${local.product_resource_name_prefix}*"]
 
     condition {
       test     = "StringEquals"
@@ -533,115 +460,95 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "AllowRequiredSharedPlatformAccess"
-    effect = "Allow"
+    sid    = "RequireBoundaryOnProductRoles"
+    effect = "Deny"
     actions = [
-      "s3:GetBucketLocation",
-      "s3:GetObject",
-      "s3:ListBucket",
-      "s3:PutObject"
+      "iam:CreateRole",
+      "iam:PutRolePermissionsBoundary"
     ]
-    resources = concat(values(var.platform_bucket_arns), local.bucket_object_arns)
+    resources = ["arn:aws:iam::${local.account_id}:role/${local.product_resource_name_prefix}*"]
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "iam:PermissionsBoundary"
+      values   = [local.product_permission_boundary_policy_arn]
+    }
   }
 
   statement {
-    sid    = "AllowRequiredSharedPlatformLogsAndSecrets"
+    sid    = "DenyUnsafeIam"
+    effect = "Deny"
+    actions = [
+      "iam:*AccessKey*",
+      "iam:*Group*",
+      "iam:*LoginProfile*",
+      "iam:*User*",
+      "iam:Attach*",
+      "iam:CreatePolicyVersion",
+      "iam:DeleteRolePermissionsBoundary",
+      "iam:Detach*",
+      "iam:PutGroupPolicy",
+      "iam:PutUserPolicy",
+      "iam:SetDefaultPolicyVersion",
+      "iam:UpdateAssumeRolePolicy"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "AllowRequiredPlatformUse"
     effect = "Allow"
     actions = [
       "logs:CreateLogStream",
       "logs:DescribeLogStreams",
       "logs:PutLogEvents",
+      "s3:GetBucketLocation",
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:PutObject",
       "secretsmanager:DescribeSecret",
       "secretsmanager:GetSecretValue"
     ]
-    resources = [
-      "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/${local.name_prefix}/products/*",
-      "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/${local.name_prefix}/products/*:*",
-      "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}/products/*"
-    ]
+    resources = concat(
+      values(var.platform_bucket_arns),
+      local.bucket_object_arns,
+      [
+        "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/${local.name_prefix}/products/*",
+        "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/${local.name_prefix}/products/*:*",
+        "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}/products/*"
+      ]
+    )
   }
 
   statement {
-    sid    = "DenyPrivilegeEscalationAndUnrestrictedIamAdmin"
-    effect = "Deny"
-    actions = [
-      "iam:AddUserToGroup",
-      "iam:AttachGroupPolicy",
-      "iam:AttachRolePolicy",
-      "iam:AttachUserPolicy",
-      "iam:CreateAccessKey",
-      "iam:CreateGroup",
-      "iam:CreateLoginProfile",
-      "iam:CreatePolicyVersion",
-      "iam:CreateUser",
-      "iam:DeleteRolePermissionsBoundary",
-      "iam:DetachGroupPolicy",
-      "iam:DetachRolePolicy",
-      "iam:DetachUserPolicy",
-      "iam:PutGroupPolicy",
-      "iam:PutUserPolicy",
-      "iam:SetDefaultPolicyVersion",
-      "iam:UpdateAssumeRolePolicy",
-      "iam:UpdateLoginProfile"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "DenyPermissionBoundaryTampering"
-    effect = "Deny"
-    actions = [
-      "iam:CreatePolicyVersion",
-      "iam:DeletePolicy",
-      "iam:DeletePolicyVersion",
-      "iam:SetDefaultPolicyVersion"
-    ]
-    resources = [local.product_permission_boundary_policy_arn]
-  }
-
-  statement {
-    sid    = "DenyCloudTrailTampering"
+    sid    = "DenyAuditAndKmsAdmin"
     effect = "Deny"
     actions = [
       "cloudtrail:DeleteTrail",
-      "cloudtrail:PutEventSelectors",
-      "cloudtrail:PutInsightSelectors",
+      "cloudtrail:Put*",
       "cloudtrail:StopLogging",
-      "cloudtrail:UpdateTrail"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "DenySharedPlatformBucketAdministration"
-    effect = "Deny"
-    actions = [
-      "s3:DeleteBucket",
-      "s3:DeleteBucketPolicy",
-      "s3:DeleteObject",
-      "s3:PutBucketPolicy",
-      "s3:PutBucketPublicAccessBlock",
-      "s3:PutBucketVersioning",
-      "s3:PutEncryptionConfiguration",
-      "s3:PutLifecycleConfiguration"
-    ]
-    resources = concat(values(var.platform_bucket_arns), local.bucket_object_arns)
-  }
-
-  statement {
-    sid    = "DenyPlatformKmsAdministration"
-    effect = "Deny"
-    actions = [
+      "cloudtrail:UpdateTrail",
       "kms:CreateGrant",
       "kms:DeleteAlias",
-      "kms:DisableKey",
-      "kms:DisableKeyRotation",
+      "kms:Disable*",
       "kms:PutKeyPolicy",
       "kms:RevokeGrant",
       "kms:ScheduleKeyDeletion",
       "kms:UpdateAlias"
     ]
     resources = ["*"]
+  }
+
+  statement {
+    sid    = "DenySharedBucketAdmin"
+    effect = "Deny"
+    actions = [
+      "s3:Delete*",
+      "s3:PutBucket*",
+      "s3:PutEncryptionConfiguration",
+      "s3:PutLifecycleConfiguration"
+    ]
+    resources = concat(values(var.platform_bucket_arns), local.bucket_object_arns)
   }
 }
 

@@ -28,13 +28,15 @@ module "networking" {
 module "storage" {
   source = "./modules/storage"
 
-  project         = var.project
-  environment     = var.environment
-  account_suffix  = var.account_suffix
-  kms_key_arn     = module.kms.key_arn
-  owner           = var.owner
-  cost_center     = var.cost_center
-  additional_tags = var.additional_tags
+  project                        = var.project
+  environment                    = var.environment
+  account_suffix                 = var.account_suffix
+  kms_key_arn                    = module.kms.key_arn
+  cloudtrail_log_prefix          = var.cloudtrail_log_prefix
+  cloudtrail_log_expiration_days = var.cloudtrail_log_expiration_days
+  owner                          = var.owner
+  cost_center                    = var.cost_center
+  additional_tags                = var.additional_tags
 }
 
 module "iam" {
@@ -77,4 +79,20 @@ module "secrets" {
   owner           = var.owner
   cost_center     = var.cost_center
   additional_tags = var.additional_tags
+}
+
+module "audit" {
+  source = "./modules/audit"
+
+  project                       = var.project
+  environment                   = var.environment
+  logs_bucket_name              = module.storage.logs_bucket_name
+  logs_bucket_arn               = module.storage.logs_bucket_arn
+  cloudtrail_log_prefix         = var.cloudtrail_log_prefix
+  kms_key_arn                   = module.kms.key_arn
+  is_multi_region_trail         = var.cloudtrail_is_multi_region_trail
+  include_global_service_events = var.cloudtrail_include_global_service_events
+  owner                         = var.owner
+  cost_center                   = var.cost_center
+  additional_tags               = var.additional_tags
 }

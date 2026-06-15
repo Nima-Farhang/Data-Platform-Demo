@@ -50,6 +50,35 @@ data "aws_iam_policy_document" "kms_key_policy" {
 
     resources = ["*"]
   }
+
+  statement {
+    sid    = "AllowCloudTrailToEncryptAuditLogs"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+
+    actions = [
+      "kms:DescribeKey",
+      "kms:GenerateDataKey*"
+    ]
+
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "kms:EncryptionContext:aws:cloudtrail:arn"
+      values   = ["arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
+    }
+  }
 }
 
 data "aws_caller_identity" "current" {}

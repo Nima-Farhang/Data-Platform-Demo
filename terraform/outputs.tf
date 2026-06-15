@@ -142,3 +142,28 @@ output "placeholder_secret_arn" {
   description = "ARN of the platform placeholder secret."
   value       = module.secrets.placeholder_secret_arn
 }
+
+output "cloudtrail_trail_name" {
+  description = "Name of the account-level CloudTrail trail."
+  value       = module.audit.trail_name
+}
+
+output "cloudtrail_trail_arn" {
+  description = "ARN of the account-level CloudTrail trail."
+  value       = module.audit.trail_arn
+}
+
+output "cloudtrail_log_bucket_name" {
+  description = "Name of the S3 bucket receiving CloudTrail logs."
+  value       = module.audit.log_bucket_name
+}
+
+output "cloudtrail_log_bucket_prefix" {
+  description = "S3 prefix where CloudTrail writes audit logs."
+  value       = module.audit.log_bucket_prefix
+}
+
+output "cloudtrail_log_bucket_arn" {
+  description = "ARN of the S3 bucket receiving CloudTrail logs."
+  value       = module.audit.log_bucket_arn
+}

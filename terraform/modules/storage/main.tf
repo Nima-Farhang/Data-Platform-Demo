@@ -83,4 +83,25 @@ resource "aws_s3_bucket_lifecycle_configuration" "platform" {
       noncurrent_days = var.noncurrent_version_expiration_days
     }
   }
+
+  dynamic "rule" {
+    for_each = each.key == "logs" ? [1] : []
+
+    content {
+      id     = "expire-cloudtrail-audit-logs"
+      status = "Enabled"
+
+      filter {
+        prefix = "${var.cloudtrail_log_prefix}/"
+      }
+
+      expiration {
+        days = var.cloudtrail_log_expiration_days
+      }
+
+      noncurrent_version_expiration {
+        noncurrent_days = var.noncurrent_version_expiration_days
+      }
+    }
+  }
 }

@@ -149,3 +149,32 @@ variable "github_repository_subjects" {
   type        = list(string)
   default     = []
 }
+
+variable "cloudtrail_log_prefix" {
+  description = "S3 prefix in the platform logs bucket used for CloudTrail audit logs."
+  type        = string
+  default     = "cloudtrail"
+}
+
+variable "cloudtrail_log_expiration_days" {
+  description = "Number of days to retain current CloudTrail audit log objects in the shared logs bucket."
+  type        = number
+  default     = 365
+
+  validation {
+    condition     = var.cloudtrail_log_expiration_days > 0
+    error_message = "CloudTrail log expiration days must be greater than zero."
+  }
+}
+
+variable "cloudtrail_is_multi_region_trail" {
+  description = "Whether the account-level CloudTrail trail records events from all regions."
+  type        = bool
+  default     = true
+}
+
+variable "cloudtrail_include_global_service_events" {
+  description = "Whether the account-level CloudTrail trail records global service events such as IAM."
+  type        = bool
+  default     = true
+}

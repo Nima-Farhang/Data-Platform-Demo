@@ -63,3 +63,20 @@ variable "noncurrent_version_expiration_days" {
     error_message = "Noncurrent version expiration days must be greater than zero."
   }
 }
+
+variable "cloudtrail_log_prefix" {
+  description = "S3 prefix in the logs bucket used for CloudTrail audit logs."
+  type        = string
+  default     = "cloudtrail"
+}
+
+variable "cloudtrail_log_expiration_days" {
+  description = "Number of days to retain current CloudTrail audit log objects in the shared logs bucket."
+  type        = number
+  default     = 365
+
+  validation {
+    condition     = var.cloudtrail_log_expiration_days > 0
+    error_message = "CloudTrail log expiration days must be greater than zero."
+  }
+}
