@@ -4,19 +4,18 @@
 
 Data Platform Demo is a reusable AWS-based foundation for shared platform infrastructure.
 
-The V1 architecture is intentionally small. It creates the shared platform infrastructure needed before data product repositories add product-specific infrastructure.
+The architecture provides the shared resources, conventions, and outputs that future data product repositories can build on without placing product workloads in this repository.
 
 ## Design Goals
 
-V1 must be:
+The platform must be:
 
-- Simple
-- Secure
-- Low-cost
-- Extensible
-- Production-realistic
-
-It should not be feature-rich. The platform should provide a stable foundation that can be expanded safely.
+- simple
+- secure
+- low-cost by default
+- extensible
+- production-realistic
+- clear about platform versus product ownership
 
 ## High-Level Flow
 
@@ -33,47 +32,27 @@ Terraform Deployment
 AWS Platform Account
         |
         v
-Shared Platform Infrastructure
+Shared Platform Foundation
+        |
+        v
+Product Repositories Consume Outputs
 ```
 
-## V1 Core Components
+## Core Components
 
-V1 includes only the following platform components:
+The platform foundation includes:
 
 1. Terraform remote state backend
 2. VPC networking baseline
-3. Shared platform S3 storage
-4. IAM roles
-5. Logging baseline
-6. Secrets Manager baseline
-7. CI/CD deployment role
-
-## V1 Platform Scope (Locked)
-
-The V1 platform scope is limited to the shared platform infrastructure needed before data product repositories are deployed.
-
-V1 must include only:
-
-- Terraform remote state backend
-- VPC networking baseline
-- Shared platform S3 storage
-- IAM roles
-- Logging baseline
-- Secrets Manager baseline
-- CI/CD deployment role
-
-V1 must explicitly exclude:
-
-- Snowflake provisioning
-- dbt models
-- Streamlit apps
-- Kafka
-- Kubernetes
-- Data pipelines
-- Product-specific infrastructure
-- Business dashboards
-
-Do not add new V1 technical components unless this architecture decision is updated.
+3. Optional VPC endpoints
+4. Shared platform S3 storage
+5. Platform KMS key
+6. IAM roles, GitHub OIDC, and product permission boundary
+7. Secrets Manager baseline
+8. CloudWatch logging baseline
+9. CloudTrail audit baseline
+10. Glue Catalog/lakehouse conventions
+11. Environment wiring and reusable outputs
 
 ## Platform vs Product Ownership
 
@@ -82,20 +61,25 @@ Data Platform Demo owns shared platform infrastructure. Data product repositorie
 | Resource type | Owning repository |
 | --- | --- |
 | Terraform state backend | Data Platform Demo |
-| Shared VPC | Data Platform Demo |
-| Shared IAM roles | Data Platform Demo |
+| Shared VPC, subnets, and optional VPC endpoints | Data Platform Demo |
 | Shared platform S3 buckets | Data Platform Demo |
-| Logging baseline | Data Platform Demo |
-| Secrets Manager baseline | Data Platform Demo |
-| CI/CD deployment roles | Data Platform Demo |
-| Product-specific S3 buckets | Data product repository |
-| Product-specific Snowflake resources | Data product repository |
+| Platform KMS key | Data Platform Demo |
+| Shared IAM roles and product permission boundary | Data Platform Demo |
+| GitHub OIDC provider and CI/CD trust policy | Data Platform Demo |
+| Secrets Manager placeholder structure | Data Platform Demo |
+| Platform CloudWatch log groups and platform alarms | Data Platform Demo |
+| Account-level CloudTrail trail | Data Platform Demo |
+| Glue Catalog conventions and platform marker database | Data Platform Demo |
+| IoT Core product resources | Data product repository |
+| EventBridge product rules | Data product repository |
+| Lambda functions | Data product repository |
+| Glue jobs, crawlers, and product workflows | Data product repository |
+| API Gateway APIs | Data product repository |
+| Product Glue databases and Iceberg tables | Data product repository |
 | dbt projects/models | Data product repository |
 | Streamlit applications | Data product repository |
-| Business pipelines | Data product repository |
-| Product dashboards | Data product repository |
-| Product-specific alerts | Data product repository |
-| Business data contracts | Data product repository |
+| Product-specific alerts and dashboards | Data product repository |
+| Business data contracts and models | Data product repository |
 
 ## Component Summary
 
@@ -113,7 +97,7 @@ It includes:
 
 ### Networking
 
-Networking provides the minimal AWS network boundary for V1.
+Networking provides the AWS network boundary.
 
 It includes:
 
@@ -121,22 +105,30 @@ It includes:
 - public subnet
 - private subnet
 - internet gateway
+- optional VPC endpoints for S3, CloudWatch Logs, Secrets Manager, STS, Glue, and KMS
 
-V1 does not include NAT Gateway, private endpoints, or multi-AZ complexity.
+VPC endpoints are disabled by default. The platform does not create NAT Gateway, transit networking, or multi-AZ topology unless the architecture scope changes.
 
 ### Platform Storage
 
-Storage provides shared platform S3 locations for data product repositories to consume.
+Storage provides shared platform S3 locations for platform and product repositories to consume.
 
 It includes:
 
-- `platform-raw`
-- `platform-logs`
-- `platform-artifacts`
+- raw bucket
+- logs bucket
+- artifacts bucket
+- curated bucket
 
-Each bucket must use encryption, versioning, lifecycle rules, and public access blocking.
+Each bucket uses encryption, versioning, lifecycle rules, and public access blocking.
 
-### IAM Roles
+### KMS
+
+KMS provides the shared platform key and alias.
+
+The key is used by shared platform resources such as S3, CloudTrail, and CloudWatch Logs where configured.
+
+### IAM
 
 IAM provides role-based access for platform administration, deployment automation, and data product repository deployment.
 
@@ -145,17 +137,10 @@ It includes:
 - Platform Admin Role
 - CI/CD Deployment Role
 - Product Deployment Role
+- GitHub OIDC integration
+- product deployment permission boundary
 
 IAM must follow least privilege and avoid hardcoded users.
-
-### Logging Baseline
-
-The logging baseline provides basic observability for platform resources.
-
-It includes:
-
-- CloudWatch Log Groups
-- basic metric alarms
 
 ### Secrets Manager Baseline
 
@@ -163,9 +148,50 @@ The Secrets Manager baseline provides a safe structure for future credentials an
 
 It includes AWS Secrets Manager placeholders only. Real credentials must not be committed to source control.
 
+### Logging Baseline
+
+The logging baseline provides basic observability for platform resources.
+
+It includes:
+
+- platform runtime log group
+- platform deployment log group
+- product log base group
+- basic platform error-count metric alarms
+- deployment failure placeholder alarm
+
+It does not include product-specific workload alarms.
+
+### Audit Baseline
+
+The audit baseline provides account-level CloudTrail logging for each environment/account.
+
+It includes:
+
+- CloudTrail trail
+- log file validation
+- delivery to the platform logs bucket
+- CloudTrail log prefix outputs
+
+It does not create product-specific trails.
+
+### Lakehouse Catalog Foundation
+
+The lakehouse module defines shared Glue Catalog conventions for future Iceberg-based products.
+
+It includes:
+
+- Glue catalog ID output
+- curated bucket location output
+- product database naming pattern
+- product Iceberg table location pattern
+- optional generic platform Glue database marker
+
+It does not create product Glue databases, product tables, crawlers, Glue jobs, or Iceberg definitions.
+
 ### Environment Wiring
 
-Environment wiring composes the locked V1 components into deployable environments. It is deployment structure, not an additional platform component.
+Environment wiring composes modules into deployable environments.
 
 The platform supports:
 
@@ -177,10 +203,13 @@ Each environment uses separate Terraform state, independent configuration, and s
 
 ## Dependency Flow
 
-V1 must be built in this order:
+The platform foundation is composed in this order:
 
 ```text
 Bootstrap
+      |
+      v
+KMS
       |
       v
 Networking
@@ -192,16 +221,31 @@ Storage
 IAM
       |
       v
-Logging
+Secrets / Logging / Audit / Lakehouse
       |
       v
-Secrets
-      |
-      v
-Environment Wiring
+Environment Outputs
 ```
 
-This order should not be violated.
+Some modules can be applied together once their inputs are available, but dependencies should remain explicit through Terraform module inputs and outputs.
+
+## Product Onboarding
+
+A product repository should consume platform outputs and create product-owned resources in its own Terraform state.
+
+The detailed onboarding workflow is documented in `docs/product-onboarding.md`.
+
+At a high level, product repositories consume outputs for:
+
+- environment and network placement
+- shared storage locations
+- platform KMS key usage
+- product deployment roles and permission boundaries
+- logging and secrets conventions
+- CloudTrail audit context
+- Glue Catalog and lakehouse naming conventions
+
+The product repository then owns its IoT Core resources, EventBridge rules, Lambda functions, Glue jobs, API Gateway APIs, product Glue databases, product Iceberg tables, dbt project, Streamlit app, and product alarms.
 
 ## CI/CD Flow
 
@@ -228,31 +272,21 @@ Manual Approval
 terraform apply
 ```
 
-## V1 Non-Goals
+Product CI/CD should live in product repositories and use the exported platform roles and boundaries.
 
-V1 does not include:
+## Non-Goals
 
-- Snowflake provisioning
-- dbt models
+The platform does not include:
+
+- IoT Core product resources
+- EventBridge product rules
+- Lambda functions
+- Glue jobs or crawlers
+- API Gateway product APIs
+- product Iceberg tables
+- dbt projects
 - Streamlit apps
-- Kafka
-- Kubernetes
-- data pipelines
 - product-specific infrastructure
 - business dashboards
 
-Those belong to data product repositories or later post-V1 decisions.
-
-## Completion Criteria
-
-V1 is complete when:
-
-- Terraform bootstrap works
-- VPC deploys successfully
-- storage buckets are created
-- IAM roles are available
-- logging is enabled
-- secrets module is functional
-- the `dev` environment deploys cleanly
-
-Only after this should the platform move toward data product integration.
+Those belong to data product repositories.
