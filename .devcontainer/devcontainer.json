@@ -12,7 +12,8 @@
                 "ms-vscode-remote.remote-containers",
                 "hashicorp.terraform",
                 "esbenp.prettier-vscode",
-                "openai.chatgpt"
+                "openai.chatgpt",
+                "github.vscode-github-actions"
             ],
             "settings": {}
         }
