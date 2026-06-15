@@ -60,3 +60,20 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable_vpc_endpoints" {
+  description = "Whether to create optional VPC endpoints for private platform workloads. Disabled by default because interface endpoints add cost."
+  type        = bool
+  default     = false
+}
+
+variable "vpc_endpoint_services" {
+  description = "VPC endpoint services to create when enable_vpc_endpoints is true. Supported values: s3, logs, secretsmanager, sts, glue, kms."
+  type        = list(string)
+  default     = ["s3", "logs", "secretsmanager", "sts", "glue", "kms"]
+
+  validation {
+    condition     = alltrue([for service in var.vpc_endpoint_services : contains(["s3", "logs", "secretsmanager", "sts", "glue", "kms"], service)])
+    error_message = "VPC endpoint services must be one of: s3, logs, secretsmanager, sts, glue, kms."
+  }
+}

@@ -23,6 +23,26 @@ output "internet_gateway_id" {
   value       = module.networking.internet_gateway_id
 }
 
+output "vpc_endpoint_ids" {
+  description = "Map of VPC endpoint IDs by service name. Empty when VPC endpoints are disabled."
+  value       = module.networking.vpc_endpoint_ids
+}
+
+output "gateway_vpc_endpoint_ids" {
+  description = "Map of gateway VPC endpoint IDs by service name."
+  value       = module.networking.gateway_vpc_endpoint_ids
+}
+
+output "interface_vpc_endpoint_ids" {
+  description = "Map of interface VPC endpoint IDs by service name."
+  value       = module.networking.interface_vpc_endpoint_ids
+}
+
+output "vpc_endpoint_security_group_id" {
+  description = "Security group ID used by interface VPC endpoints, when created."
+  value       = module.networking.vpc_endpoint_security_group_id
+}
+
 output "aws_region" {
   description = "AWS region for the dev platform deployment."
   value       = var.aws_region

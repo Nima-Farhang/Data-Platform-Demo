@@ -20,6 +20,8 @@ module "networking" {
   public_subnet_cidr_block  = var.public_subnet_cidr_block
   private_subnet_cidr_block = var.private_subnet_cidr_block
   availability_zone         = var.availability_zone
+  enable_vpc_endpoints      = var.enable_vpc_endpoints
+  vpc_endpoint_services     = var.vpc_endpoint_services
   owner                     = var.owner
   cost_center               = var.cost_center
   additional_tags           = var.additional_tags
