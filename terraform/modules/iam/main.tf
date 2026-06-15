@@ -17,6 +17,30 @@ locals {
     local.account_root_arn
   ]
 
+  github_oidc_provider_url        = "https://token.actions.githubusercontent.com"
+  github_oidc_provider_configured = var.github_oidc_provider_arn != null || var.create_github_oidc_provider
+  github_oidc_provider_arn        = var.github_oidc_provider_arn != null ? var.github_oidc_provider_arn : try(aws_iam_openid_connect_provider.github[0].arn, null)
+
+  github_branch_subjects = var.github_organization == null ? [] : flatten([
+    for repository in var.github_allowed_repositories : [
+      for branch in var.github_allowed_branches : "repo:${var.github_organization}/${repository}:ref:refs/heads/${branch}"
+    ]
+  ])
+
+  github_environment_subjects = var.github_organization == null ? [] : flatten([
+    for repository in var.github_allowed_repositories : [
+      for environment in var.github_allowed_environments : "repo:${var.github_organization}/${repository}:environment:${environment}"
+    ]
+  ])
+
+  github_repository_subjects = distinct(concat(
+    local.github_branch_subjects,
+    local.github_environment_subjects,
+    var.github_repository_subjects
+  ))
+
+  github_oidc_trust_enabled = local.github_oidc_provider_configured && length(local.github_repository_subjects) > 0
+
   bucket_object_arns = [
     for bucket_arn in values(var.platform_bucket_arns) : "${bucket_arn}/*"
   ]
@@ -57,8 +81,23 @@ data "aws_iam_policy_document" "cicd_account_assume_role" {
   }
 }
 
+resource "aws_iam_openid_connect_provider" "github" {
+  count = var.create_github_oidc_provider ? 1 : 0
+
+  url             = local.github_oidc_provider_url
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = var.github_oidc_thumbprint_list
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-github-oidc-provider"
+    }
+  )
+}
+
 data "aws_iam_policy_document" "cicd_github_assume_role" {
-  count = var.github_oidc_provider_arn == null ? 0 : 1
+  count = local.github_oidc_trust_enabled ? 1 : 0
 
   statement {
     effect  = "Allow"
@@ -66,7 +105,7 @@ data "aws_iam_policy_document" "cicd_github_assume_role" {
 
     principals {
       type        = "Federated"
-      identifiers = [var.github_oidc_provider_arn]
+      identifiers = [local.github_oidc_provider_arn]
     }
 
     condition {
@@ -78,7 +117,7 @@ data "aws_iam_policy_document" "cicd_github_assume_role" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = var.github_repository_subjects
+      values   = local.github_repository_subjects
     }
   }
 }
@@ -111,12 +150,29 @@ resource "aws_iam_role" "platform_admin" {
 
 resource "aws_iam_role" "cicd" {
   name = "${local.name_prefix}-cicd-deployment-role"
-  assume_role_policy = var.github_oidc_provider_arn == null ? (
-    data.aws_iam_policy_document.cicd_account_assume_role.json
-    ) : (
+  assume_role_policy = local.github_oidc_trust_enabled ? (
     data.aws_iam_policy_document.cicd_github_assume_role[0].json
+    ) : (
+    data.aws_iam_policy_document.cicd_account_assume_role.json
   )
   description = "CI/CD deployment role for shared ${var.environment} platform infrastructure."
+
+  lifecycle {
+    precondition {
+      condition     = !(var.create_github_oidc_provider && var.github_oidc_provider_arn != null)
+      error_message = "Set either create_github_oidc_provider or github_oidc_provider_arn, not both."
+    }
+
+    precondition {
+      condition     = !local.github_oidc_provider_configured || length(local.github_repository_subjects) > 0
+      error_message = "Configure at least one GitHub OIDC subject using github_allowed_repositories with branches/environments or github_repository_subjects."
+    }
+
+    precondition {
+      condition     = length(var.github_allowed_repositories) == 0 || var.github_organization != null
+      error_message = "Set github_organization when github_allowed_repositories is not empty."
+    }
+  }
 
   tags = merge(
     local.common_tags,

@@ -93,6 +93,16 @@ output "cicd_role_arn" {
   value       = module.iam.cicd_role_arn
 }
 
+output "github_oidc_provider_arn" {
+  description = "ARN of the GitHub Actions OIDC provider used by the CI/CD role, when configured."
+  value       = module.iam.github_oidc_provider_arn
+}
+
+output "github_repository_subjects" {
+  description = "GitHub OIDC subject patterns allowed to assume the CI/CD role."
+  value       = module.iam.github_repository_subjects
+}
+
 output "product_deployment_role_arn" {
   description = "ARN of the Product Deployment IAM role."
   value       = module.iam.product_deployment_role_arn
