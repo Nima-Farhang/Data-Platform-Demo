@@ -33,6 +33,56 @@ output "environment" {
   value       = var.environment
 }
 
+output "raw_bucket_name" {
+  description = "Name of the shared raw platform bucket."
+  value       = module.storage.raw_bucket_name
+}
+
+output "raw_bucket_arn" {
+  description = "ARN of the shared raw platform bucket."
+  value       = module.storage.raw_bucket_arn
+}
+
+output "logs_bucket_name" {
+  description = "Name of the shared logs platform bucket."
+  value       = module.storage.logs_bucket_name
+}
+
+output "logs_bucket_arn" {
+  description = "ARN of the shared logs platform bucket."
+  value       = module.storage.logs_bucket_arn
+}
+
+output "artifacts_bucket_name" {
+  description = "Name of the shared artifacts platform bucket."
+  value       = module.storage.artifacts_bucket_name
+}
+
+output "artifacts_bucket_arn" {
+  description = "ARN of the shared artifacts platform bucket."
+  value       = module.storage.artifacts_bucket_arn
+}
+
+output "curated_bucket_name" {
+  description = "Name of the shared curated platform bucket."
+  value       = module.storage.curated_bucket_name
+}
+
+output "curated_bucket_arn" {
+  description = "ARN of the shared curated platform bucket."
+  value       = module.storage.curated_bucket_arn
+}
+
+output "platform_bucket_names" {
+  description = "Map of shared platform bucket names by purpose."
+  value       = module.storage.bucket_names
+}
+
+output "platform_bucket_arns" {
+  description = "Map of shared platform bucket ARNs by purpose."
+  value       = module.storage.bucket_arns
+}
+
 output "platform_admin_role_arn" {
   description = "ARN of the Platform Admin IAM role."
   value       = module.iam.platform_admin_role_arn

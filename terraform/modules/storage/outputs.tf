@@ -28,6 +28,16 @@ output "artifacts_bucket_arn" {
   value       = aws_s3_bucket.platform["artifacts"].arn
 }
 
+output "curated_bucket_name" {
+  description = "Name of the shared curated platform bucket."
+  value       = aws_s3_bucket.platform["curated"].bucket
+}
+
+output "curated_bucket_arn" {
+  description = "ARN of the shared curated platform bucket."
+  value       = aws_s3_bucket.platform["curated"].arn
+}
+
 output "bucket_names" {
   description = "Map of shared platform bucket names by purpose."
   value = {

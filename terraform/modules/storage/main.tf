@@ -5,6 +5,7 @@ locals {
     raw       = "${local.name_prefix}-raw-${var.account_suffix}"
     logs      = "${local.name_prefix}-logs-${var.account_suffix}"
     artifacts = "${local.name_prefix}-artifacts-${var.account_suffix}"
+    curated   = "${local.name_prefix}-curated-${var.account_suffix}"
   }
 
   common_tags = merge(
@@ -51,7 +52,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "platform" {
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      sse_algorithm     = var.kms_key_arn == null ? "AES256" : "aws:kms"
+      kms_master_key_id = var.kms_key_arn
     }
   }
 }
@@ -63,5 +65,22 @@ resource "aws_s3_bucket_versioning" "platform" {
 
   versioning_configuration {
     status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "platform" {
+  for_each = aws_s3_bucket.platform
+
+  bucket = each.value.id
+
+  rule {
+    id     = "expire-noncurrent-versions"
+    status = "Enabled"
+
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = var.noncurrent_version_expiration_days
+    }
   }
 }

@@ -31,6 +31,7 @@ module "storage" {
   project         = var.project
   environment     = var.environment
   account_suffix  = var.account_suffix
+  kms_key_arn     = module.kms.key_arn
   owner           = var.owner
   cost_center     = var.cost_center
   additional_tags = var.additional_tags

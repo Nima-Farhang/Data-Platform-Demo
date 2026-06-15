@@ -7,5 +7,8 @@ It includes only:
 - Raw bucket
 - Logs bucket
 - Artifacts bucket
+- Curated bucket
 
-Each bucket has server-side encryption, versioning, and public access blocking enabled.
+Each bucket has server-side encryption, versioning, lifecycle configuration, and public access blocking enabled.
+
+By default, buckets use AES256 managed encryption. Pass `kms_key_arn` to use the shared platform KMS key.

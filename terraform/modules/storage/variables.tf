@@ -46,3 +46,20 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "kms_key_arn" {
+  description = "Optional KMS key ARN used for S3 bucket encryption. When null, buckets use AES256 managed encryption."
+  type        = string
+  default     = null
+}
+
+variable "noncurrent_version_expiration_days" {
+  description = "Number of days to retain noncurrent object versions in shared platform buckets."
+  type        = number
+  default     = 90
+
+  validation {
+    condition     = var.noncurrent_version_expiration_days > 0
+    error_message = "Noncurrent version expiration days must be greater than zero."
+  }
+}
