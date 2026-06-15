@@ -178,3 +178,31 @@ variable "cloudtrail_include_global_service_events" {
   type        = bool
   default     = true
 }
+
+variable "platform_log_group_retention_days" {
+  description = "Default retention in days for platform CloudWatch log groups."
+  type        = number
+  default     = 90
+
+  validation {
+    condition     = contains([1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], var.platform_log_group_retention_days)
+    error_message = "Platform log group retention days must be a valid CloudWatch Logs retention value."
+  }
+}
+
+variable "platform_log_group_retention_overrides" {
+  description = "Optional retention overrides for platform log groups by key. Supported keys are platform, deployments, products."
+  type        = map(number)
+  default     = {}
+
+  validation {
+    condition     = alltrue([for days in values(var.platform_log_group_retention_overrides) : contains([1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], days)])
+    error_message = "Platform log group retention override values must be valid CloudWatch Logs retention values."
+  }
+}
+
+variable "platform_logging_alarm_actions" {
+  description = "Optional alarm action ARNs for platform logging CloudWatch alarms."
+  type        = list(string)
+  default     = []
+}

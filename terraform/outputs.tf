@@ -167,3 +167,53 @@ output "cloudtrail_log_bucket_arn" {
   description = "ARN of the S3 bucket receiving CloudTrail logs."
   value       = module.audit.log_bucket_arn
 }
+
+output "platform_log_group_names" {
+  description = "Map of platform CloudWatch log group names by purpose."
+  value       = module.logging.log_group_names
+}
+
+output "platform_log_group_arns" {
+  description = "Map of platform CloudWatch log group ARNs by purpose."
+  value       = module.logging.log_group_arns
+}
+
+output "platform_runtime_log_group_name" {
+  description = "Name of the shared platform runtime log group."
+  value       = module.logging.platform_log_group_name
+}
+
+output "platform_runtime_log_group_arn" {
+  description = "ARN of the shared platform runtime log group."
+  value       = module.logging.platform_log_group_arn
+}
+
+output "platform_deployment_log_group_name" {
+  description = "Name of the shared platform deployment log group."
+  value       = module.logging.deployment_log_group_name
+}
+
+output "platform_deployment_log_group_arn" {
+  description = "ARN of the shared platform deployment log group."
+  value       = module.logging.deployment_log_group_arn
+}
+
+output "product_log_group_base_name" {
+  description = "Base CloudWatch log group name exposed for product repositories."
+  value       = module.logging.product_log_group_base_name
+}
+
+output "product_log_group_base_arn" {
+  description = "Base CloudWatch log group ARN exposed for product repositories."
+  value       = module.logging.product_log_group_base_arn
+}
+
+output "platform_error_alarm_names" {
+  description = "Names of platform error-count CloudWatch alarms."
+  value       = module.logging.platform_error_alarm_names
+}
+
+output "platform_deployment_failure_alarm_name" {
+  description = "Name of the platform deployment failure placeholder alarm."
+  value       = module.logging.deployment_failure_alarm_name
+}

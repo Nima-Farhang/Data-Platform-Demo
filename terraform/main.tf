@@ -81,6 +81,20 @@ module "secrets" {
   additional_tags = var.additional_tags
 }
 
+module "logging" {
+  source = "./modules/logging"
+
+  project                           = var.project
+  environment                       = var.environment
+  log_group_retention_days          = var.platform_log_group_retention_days
+  platform_log_group_retention_days = var.platform_log_group_retention_overrides
+  log_group_kms_key_arn             = module.kms.key_arn
+  alarm_actions                     = var.platform_logging_alarm_actions
+  owner                             = var.owner
+  cost_center                       = var.cost_center
+  additional_tags                   = var.additional_tags
+}
+
 module "audit" {
   source = "./modules/audit"
 
