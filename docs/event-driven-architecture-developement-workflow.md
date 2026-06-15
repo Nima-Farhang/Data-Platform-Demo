@@ -89,6 +89,7 @@ Focus on:
 - tagging strategy
 - existing storage, IAM, networking, logging, and secrets modules
 - docs/adr decisions
+- README.md
 - platform/product boundary rules
 
 Do not write code yet.
