@@ -47,6 +47,17 @@ variable "product_resource_name_prefix" {
   }
 }
 
+variable "platform_catalog_database_name" {
+  description = "Optional name for the generic platform Glue database marker managed by the lakehouse foundation. Defaults to <project>_<environment>_platform."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.platform_catalog_database_name == null || can(regex("^[a-z0-9_]+$", var.platform_catalog_database_name))
+    error_message = "Platform catalog database name must use lowercase letters, numbers, and underscores only."
+  }
+}
+
 variable "github_oidc_provider_arn" {
   description = "Optional externally managed GitHub Actions OIDC provider ARN allowed to assume the CI/CD role. Leave null when create_github_oidc_provider is true."
   type        = string

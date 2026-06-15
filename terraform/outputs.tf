@@ -217,3 +217,43 @@ output "platform_deployment_failure_alarm_name" {
   description = "Name of the platform deployment failure placeholder alarm."
   value       = module.logging.deployment_failure_alarm_name
 }
+
+output "lakehouse_catalog_id" {
+  description = "AWS Glue catalog ID used by this environment."
+  value       = module.lakehouse.catalog_id
+}
+
+output "lakehouse_curated_bucket_location" {
+  description = "S3 URI for the shared curated lakehouse root."
+  value       = module.lakehouse.curated_bucket_location
+}
+
+output "lakehouse_curated_bucket_prefix" {
+  description = "Prefix inside the curated bucket reserved for lakehouse data."
+  value       = module.lakehouse.curated_bucket_prefix
+}
+
+output "lakehouse_platform_catalog_database_name" {
+  description = "Name of the generic platform Glue database marker, when enabled."
+  value       = module.lakehouse.platform_catalog_database_name
+}
+
+output "lakehouse_platform_catalog_database_arn" {
+  description = "ARN of the generic platform Glue database marker, when enabled."
+  value       = module.lakehouse.platform_catalog_database_arn
+}
+
+output "lakehouse_naming_conventions" {
+  description = "Shared Glue Catalog and Iceberg storage naming conventions for product repositories."
+  value       = module.lakehouse.naming_conventions
+}
+
+output "lakehouse_product_database_name_pattern" {
+  description = "Naming convention product repositories should use for Glue databases."
+  value       = module.lakehouse.product_database_name_pattern
+}
+
+output "lakehouse_product_table_location_pattern" {
+  description = "S3 location convention product repositories should use for Iceberg table roots."
+  value       = module.lakehouse.product_table_location_pattern
+}

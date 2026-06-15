@@ -206,3 +206,38 @@ variable "platform_logging_alarm_actions" {
   type        = list(string)
   default     = []
 }
+
+variable "lakehouse_curated_bucket_prefix" {
+  description = "Prefix inside the curated bucket reserved for Iceberg/lakehouse data."
+  type        = string
+  default     = "iceberg"
+}
+
+variable "create_platform_catalog_database" {
+  description = "Whether to create a generic platform Glue database marker for the environment catalog."
+  type        = bool
+  default     = true
+}
+
+variable "platform_catalog_database_name" {
+  description = "Optional name for the generic platform Glue database marker. Defaults to <project>_<environment>_platform."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.platform_catalog_database_name == null || can(regex("^[a-z0-9_]+$", var.platform_catalog_database_name))
+    error_message = "Platform catalog database name must use lowercase letters, numbers, and underscores only."
+  }
+}
+
+variable "product_database_name_pattern" {
+  description = "Naming convention product repositories should use for Glue databases."
+  type        = string
+  default     = "<project>_<environment>_<product>"
+}
+
+variable "product_table_location_pattern" {
+  description = "S3 location convention product repositories should use for Iceberg table roots."
+  type        = string
+  default     = "s3://<curated-bucket>/<curated-prefix>/products/<product>/<database>/<table>/"
+}

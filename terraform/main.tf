@@ -48,6 +48,7 @@ module "iam" {
   platform_admin_principal_arns     = var.platform_admin_principal_arns
   product_deployment_principal_arns = var.product_deployment_principal_arns
   product_resource_name_prefix      = var.product_resource_name_prefix
+  platform_catalog_database_name    = var.platform_catalog_database_name
   github_oidc_provider_arn          = var.github_oidc_provider_arn
   create_github_oidc_provider       = var.create_github_oidc_provider
   github_oidc_thumbprint_list       = var.github_oidc_thumbprint_list
@@ -109,4 +110,21 @@ module "audit" {
   owner                         = var.owner
   cost_center                   = var.cost_center
   additional_tags               = var.additional_tags
+}
+
+module "lakehouse" {
+  source = "./modules/lakehouse"
+
+  project                          = var.project
+  environment                      = var.environment
+  curated_bucket_name              = module.storage.curated_bucket_name
+  curated_bucket_arn               = module.storage.curated_bucket_arn
+  curated_bucket_prefix            = var.lakehouse_curated_bucket_prefix
+  create_platform_catalog_database = var.create_platform_catalog_database
+  platform_catalog_database_name   = var.platform_catalog_database_name
+  product_database_name_pattern    = var.product_database_name_pattern
+  product_table_location_pattern   = var.product_table_location_pattern
+  owner                            = var.owner
+  cost_center                      = var.cost_center
+  additional_tags                  = var.additional_tags
 }

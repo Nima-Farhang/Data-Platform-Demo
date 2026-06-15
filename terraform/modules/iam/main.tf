@@ -23,6 +23,7 @@ locals {
   product_permission_boundary_tag_key         = "DataPlatformScope"
   product_permission_boundary_tag_value       = "product"
   product_permission_boundary_allowed_tagkeys = [local.product_permission_boundary_tag_key]
+  platform_catalog_database_name              = var.platform_catalog_database_name != null ? var.platform_catalog_database_name : "${replace(var.project, "-", "_")}_${var.environment}_platform"
 
   github_oidc_provider_url        = "https://token.actions.githubusercontent.com"
   github_oidc_provider_configured = var.github_oidc_provider_arn != null || var.create_github_oidc_provider
@@ -319,6 +320,24 @@ data "aws_iam_policy_document" "platform_admin" {
     resources = [
       "arn:aws:iam::${local.account_id}:policy/${local.name_prefix}-*",
       "arn:aws:iam::${local.account_id}:role/${local.name_prefix}-*"
+    ]
+  }
+
+  statement {
+    sid    = "ManagePlatformGlueCatalogMarker"
+    effect = "Allow"
+    actions = [
+      "glue:CreateDatabase",
+      "glue:DeleteDatabase",
+      "glue:GetDatabase",
+      "glue:GetDatabases",
+      "glue:TagResource",
+      "glue:UntagResource",
+      "glue:UpdateDatabase"
+    ]
+    resources = [
+      "arn:aws:glue:${local.region}:${local.account_id}:catalog",
+      "arn:aws:glue:${local.region}:${local.account_id}:database/${local.platform_catalog_database_name}"
     ]
   }
 }
