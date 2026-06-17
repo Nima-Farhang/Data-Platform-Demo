@@ -12,5 +12,5 @@ cost_center = "Demo"
 
 github_oidc_provider_arn    = "arn:aws:iam::210006516097:oidc-provider/token.actions.githubusercontent.com"
 github_organization         = "Nima-Farhang"
-github_allowed_repositories = ["Data-Platform-Demo","Data-Product-Demo","Event-Driven-Lakehouse-Demo"]
+github_allowed_repositories = ["Data-Platform-Demo", "Data-Product-Demo", "Event-Driven-Lakehouse-Demo"]
 github_allowed_environments = ["prod"]
