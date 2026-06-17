@@ -23,3 +23,19 @@ output "aws_region" {
   value       = var.aws_region
 }
 
+
+
+output "github_oidc_provider_arn" {
+  description = "ARN of the GitHub Actions OIDC provider used by bootstrap deployment roles."
+  value       = aws_iam_openid_connect_provider.github.arn
+}
+
+output "github_deployment_role_arns" {
+  description = "Map of GitHub Actions deployment role ARNs by environment. Use these as AWS_DEPLOY_ROLE_ARN GitHub Environment secrets."
+  value       = { for environment, role in aws_iam_role.github_deployment : environment => role.arn }
+}
+
+output "github_repository_subjects_by_environment" {
+  description = "GitHub OIDC subject patterns allowed to assume each bootstrap deployment role."
+  value       = local.github_repository_subjects_by_environment
+}

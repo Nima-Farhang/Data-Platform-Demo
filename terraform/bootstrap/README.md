@@ -16,6 +16,8 @@ This bootstrap layer creates:
 - DynamoDB server-side encryption
 - S3 bucket versioning
 - S3 public access blocking
+- GitHub Actions OIDC provider
+- GitHub Actions CI/CD deployment roles for `dev`, `test`, and `prod`
 
 It does not create networking resources.
 

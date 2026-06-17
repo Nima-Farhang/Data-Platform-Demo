@@ -1,6 +1,27 @@
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
 locals {
   state_bucket_name = "${var.project}-terraform-state-${var.state_bucket_suffix}"
   lock_table_name   = "${var.project}-terraform-locks"
+  account_id        = data.aws_caller_identity.current.account_id
+  region            = data.aws_region.current.name
+
+  github_oidc_provider_url = "https://token.actions.githubusercontent.com"
+  github_environment_subjects_by_environment = {
+    for environment in var.deployment_environments : environment => flatten([
+      for repository in var.github_allowed_repositories : [
+        "repo:${var.github_organization}/${repository}:environment:${environment}"
+      ]
+    ])
+  }
+  github_repository_subjects_by_environment = {
+    for environment in var.deployment_environments : environment => distinct(concat(
+      lookup(local.github_environment_subjects_by_environment, environment, []),
+      lookup(var.github_repository_subjects_by_environment, environment, [])
+    ))
+  }
 
   common_tags = merge(
     {
@@ -77,4 +98,156 @@ resource "aws_dynamodb_table" "terraform_locks" {
   server_side_encryption {
     enabled = true
   }
+}
+
+
+resource "aws_iam_openid_connect_provider" "github" {
+  url             = local.github_oidc_provider_url
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = var.github_oidc_thumbprint_list
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.project}-github-oidc-provider"
+    }
+  )
+}
+
+data "aws_iam_policy_document" "github_deployment_assume_role" {
+  for_each = toset(var.deployment_environments)
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = local.github_repository_subjects_by_environment[each.key]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "github_deployment" {
+  for_each = toset(var.deployment_environments)
+
+  statement {
+    sid    = "UseTerraformBackend"
+    effect = "Allow"
+    actions = [
+      "s3:GetBucketLocation",
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ]
+    resources = [
+      aws_s3_bucket.terraform_state.arn,
+      "${aws_s3_bucket.terraform_state.arn}/environments/${each.key}/*"
+    ]
+  }
+
+  statement {
+    sid    = "UseTerraformStateLock"
+    effect = "Allow"
+    actions = [
+      "dynamodb:DescribeTable",
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:UpdateItem"
+    ]
+    resources = [aws_dynamodb_table.terraform_locks.arn]
+  }
+
+  statement {
+    sid    = "ReadAwsMetadata"
+    effect = "Allow"
+    actions = [
+      "sts:GetCallerIdentity",
+      "ec2:Describe*",
+      "cloudwatch:Describe*",
+      "cloudwatch:List*",
+      "logs:Describe*",
+      "logs:List*",
+      "s3:GetAccountPublicAccessBlock",
+      "s3:ListAllMyBuckets",
+      "iam:Get*",
+      "iam:List*",
+      "kms:Describe*",
+      "kms:Get*",
+      "kms:List*",
+      "secretsmanager:ListSecrets",
+      "cloudtrail:DescribeTrails",
+      "cloudtrail:Get*",
+      "cloudtrail:List*",
+      "glue:Get*",
+      "glue:List*"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ManageEnvironmentPlatformInfrastructure"
+    effect = "Allow"
+    actions = [
+      "apigateway:*",
+      "cloudtrail:*",
+      "cloudwatch:*",
+      "ec2:*",
+      "events:*",
+      "glue:*",
+      "iam:*",
+      "kms:*",
+      "lambda:*",
+      "logs:*",
+      "s3:*",
+      "secretsmanager:*"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role" "github_deployment" {
+  for_each = toset(var.deployment_environments)
+
+  name               = "${var.project}-${each.key}-cicd-deployment-role"
+  assume_role_policy = data.aws_iam_policy_document.github_deployment_assume_role[each.key].json
+  description        = "GitHub Actions deployment role for the ${each.key} shared platform environment."
+
+  lifecycle {
+    precondition {
+      condition     = length(local.github_repository_subjects_by_environment[each.key]) > 0
+      error_message = "Configure at least one GitHub OIDC subject for each deployment environment."
+    }
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name        = "${var.project}-${each.key}-cicd-deployment-role"
+      Environment = each.key
+      Role        = "cicd-deployment"
+    }
+  )
+}
+
+resource "aws_iam_role_policy" "github_deployment" {
+  for_each = toset(var.deployment_environments)
+
+  name   = "${var.project}-${each.key}-cicd-deployment-policy"
+  role   = aws_iam_role.github_deployment[each.key].id
+  policy = data.aws_iam_policy_document.github_deployment[each.key].json
 }

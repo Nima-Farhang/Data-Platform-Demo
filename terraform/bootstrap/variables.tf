@@ -43,3 +43,37 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+
+variable "deployment_environments" {
+  description = "Environment names that receive GitHub Actions CI/CD deployment roles during bootstrap."
+  type        = list(string)
+  default     = ["dev", "test", "prod"]
+
+  validation {
+    condition     = alltrue([for environment in var.deployment_environments : contains(["dev", "test", "prod"], environment)])
+    error_message = "Deployment environments must contain only: dev, test, prod."
+  }
+}
+
+variable "github_oidc_thumbprint_list" {
+  description = "Thumbprints to configure on the GitHub Actions OIDC provider."
+  type        = list(string)
+  default     = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+}
+
+variable "github_organization" {
+  description = "GitHub organization or owner that contains repositories allowed to assume bootstrap deployment roles."
+  type        = string
+}
+
+variable "github_allowed_repositories" {
+  description = "Repository names in github_organization allowed to assume bootstrap deployment roles through GitHub Environments."
+  type        = list(string)
+}
+
+variable "github_repository_subjects_by_environment" {
+  description = "Additional explicit GitHub OIDC subject patterns allowed per environment. Prefer github_organization, github_allowed_repositories, and deployment_environments for normal use."
+  type        = map(list(string))
+  default     = {}
+}

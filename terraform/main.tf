@@ -51,14 +51,6 @@ module "iam" {
   product_deployment_principal_arns = var.product_deployment_principal_arns
   product_resource_name_prefix      = var.product_resource_name_prefix
   platform_catalog_database_name    = var.platform_catalog_database_name
-  github_oidc_provider_arn          = var.github_oidc_provider_arn
-  create_github_oidc_provider       = var.create_github_oidc_provider
-  github_oidc_thumbprint_list       = var.github_oidc_thumbprint_list
-  github_organization               = var.github_organization
-  github_allowed_repositories       = var.github_allowed_repositories
-  github_allowed_branches           = var.github_allowed_branches
-  github_allowed_environments       = var.github_allowed_environments
-  github_repository_subjects        = var.github_repository_subjects
   owner                             = var.owner
   cost_center                       = var.cost_center
   additional_tags                   = var.additional_tags
