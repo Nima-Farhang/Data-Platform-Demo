@@ -40,5 +40,4 @@ State separation reduces the risk of one environment accidentally modifying anot
 
 - `docs/environment-strategy.md`
 - `docs/architecture.md`
-- `docs/naming-conventions.md`
-- `docs/tagging-strategy.md`
+- `docs/standards.md`

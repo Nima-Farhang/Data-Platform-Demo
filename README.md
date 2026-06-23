@@ -1,288 +1,81 @@
 # Data Platform Demo
 
-## Overview
+Data Platform Demo is a self-contained AWS platform foundation for future data product repositories. It creates shared infrastructure, security guardrails, deployment roles, storage, logging, audit, and lakehouse conventions that product teams can reuse without placing product workloads in this repository.
 
-**Data Platform Demo** is a self-contained blueprint for bootstrapping reusable AWS-based shared platform infrastructure.
+The repository owns shared platform infrastructure only. Product-specific infrastructure, pipelines, dbt projects, Streamlit apps, dashboards, and business logic belong in separate data product repositories.
 
-It is designed to support future data product repositories by providing shared platform infrastructure, security boundaries, storage zones, deployment roles, and operational foundations.
+## What This Repository Provides
 
-This repository is intentionally focused on **shared platform infrastructure**, not product-specific infrastructure.
+- Terraform remote state bootstrap resources
+- reusable Terraform modules for platform concerns
+- environment compositions for `dev`, `test`, and `prod`
+- shared VPC networking baseline with optional VPC endpoints
+- shared S3 buckets for raw, curated, logs, and artifacts data
+- shared KMS, IAM, GitHub OIDC, and product deployment permission boundary
+- Secrets Manager placeholder structure
+- CloudWatch logging baseline and CloudTrail audit baseline
+- Glue Catalog and lakehouse naming conventions
+- GitHub Actions based Terraform validation and deployment workflows
 
----
+## Platform Boundary
 
-## Purpose
-
-Many small and mid-sized companies need a reliable data platform foundation before they can build useful analytics, reporting, automation, or AI-enabled data products.
-
-This project demonstrates how to create that foundation using production-minded engineering patterns:
-
-- Infrastructure as Code
-- remote Terraform state
-- repeatable environment deployment
-- shared data lake storage
-- IAM role separation
-- logging and monitoring baseline
-- CI/CD-ready structure
-- clear platform/product boundary
-
----
-
-## Relationship to Data Product Repositories
-
-Data Platform Demo is designed to work alongside a separate data product repository.
+Data Platform Demo creates shared foundations that many products can consume. Data product repositories create workload-specific resources in their own Terraform state.
 
 ```text
 Data Platform Demo
-        ↓
-Creates shared platform infrastructure
-        ↓
+  -> shared AWS platform infrastructure and outputs
 Data product repository
-        ↓
-Creates product-specific infrastructure
+  -> product-owned infrastructure, data models, apps, and business logic
 ```
 
-### Data Platform Demo owns
+Examples that belong in product repositories:
 
-- Terraform backend
-- shared AWS platform foundation
-- shared S3 buckets
-- IAM roles and policies
-- logging baseline
-- secrets baseline
-- CI/CD deployment role
-- VPC networking baseline
+- IoT Core resources
+- EventBridge product rules
+- Lambda functions
+- Glue jobs, crawlers, workflows, databases, and product tables
+- API Gateway APIs
+- dbt projects
+- Streamlit applications
+- product-specific dashboards, alarms, and business rules
 
-### Data product repository owns
-
-- product-specific Snowflake resources
-- dbt models
-- Streamlit apps
-- product-specific CI/CD
-- product-specific business logic
-
-The guiding rule is:
-
-> Shared platform infrastructure belongs in Data Platform Demo. Product-specific infrastructure belongs in the data product repository.
-
----
-
-## Architecture at a Glance
+## Repository Layout
 
 ```text
-GitHub Repository
-│
-├── terraform/
-│   ├── bootstrap/
-│   │   └── Remote Terraform state backend
-│   │
-│   ├── modules/
-│   │   ├── storage/
-│   │   ├── iam/
-│   │   ├── secrets/
-│   │   ├── logging/
-│   │   └── networking/
-│   │
-│   └── environments/
-│       ├── dev/
-│       ├── test/
-│       └── prod/
-│
-├── docs/
-│   └── Architecture, security, naming, and design decisions
-│
-├── scripts/
-│   └── Helper scripts for bootstrap, plan, and apply
-│
-├── .github/workflows/
-│   └── Terraform CI/CD workflows
-│
-└── .devcontainer/
-    └── Reproducible development environment
+.
+|-- .github/workflows/        Terraform CI/CD workflows
+|-- docs/                     Architecture, operating standards, and ADRs
+|-- scripts/                  Bootstrap and deployment helpers
+`-- terraform/
+    |-- bootstrap/            Remote state bootstrap stack
+    |-- environments/         dev, test, and prod compositions
+    `-- modules/              Reusable platform modules
 ```
 
----
+## Authoritative Documentation
 
-## Core Infrastructure
+- [Architecture](docs/architecture.md) is the detailed source of truth for the platform design, component ownership, dependencies, and product interface.
+- [Platform Scope](docs/platform-scope.md) defines what belongs in this repository versus product repositories.
+- [Module Boundaries](docs/module-boundaries.md) defines each Terraform module's responsibilities.
+- [Security Model](docs/security-model.md) describes the security baseline and guardrails.
+- [Product Onboarding](docs/product-onboarding.md) explains how product repositories consume platform outputs.
+- [Standards](docs/standards.md) covers naming and tagging conventions.
+- [ADRs](docs/adr/README.md) record durable architecture decisions.
 
-The first version of this repository should build a minimal but professional shared platform infrastructure foundation.
+## Deployment Flow
 
-The V1 platform scope is locked to shared platform infrastructure only. It includes only:
-
-- Terraform remote state backend
-- VPC networking baseline
-- Shared platform S3 storage
-- IAM roles
-- Logging baseline
-- Secrets Manager baseline
-- CI/CD deployment role
-
-V1 explicitly excludes Snowflake provisioning, dbt models, Streamlit apps, Kafka, Kubernetes, data pipelines, product-specific infrastructure, and business dashboards.
-
-### 1. Terraform Backend
-
-Creates:
-
-- S3 bucket for Terraform state
-- DynamoDB table for state locking
-- bucket encryption
-- bucket versioning
-- public access block
-
-### 2. Shared Data Lake Storage
-
-Creates standard platform buckets such as:
-
-- raw landing bucket
-- artifacts bucket
-- logs bucket
-
-These are shared platform infrastructure resources that future data product repositories can use.
-
-### 3. IAM Roles and Policies
-
-Creates role patterns for:
-
-- platform administration
-- GitHub Actions / CI/CD deployment
-- product deployment
-
-### 4. Secrets Baseline
-
-Creates a safe structure for future secret management using AWS Secrets Manager.
-
-Secret values should not be committed to source control.
-
-### 5. Logging Baseline
-
-Creates baseline log groups and optional alerting structures for shared platform infrastructure.
-
-### 6. VPC Networking Baseline
-
-Networking should be kept minimal in the first version.
-
-V1 creates:
-
-- VPC
-- public subnet
-- private subnets
-- internet gateway
-
-Post-V1 versions may expand the networking baseline only when a clear product or platform requirement exists.
-
----
-
-## Recommended Repository Structure
+The expected platform deployment flow is:
 
 ```text
-data-platform-demo/
-│
-├── README.md
-├── QUICKSTART.md
-├── DEVELOPMENT_GUIDE.md
-├── commands.md
-│
-├── .devcontainer/
-│   ├── Dockerfile
-│   ├── devcontainer.json
-│   └── setup.sh
-│
-├── .github/
-│   └── workflows/
-│       ├── terraform-ci.yml
-│       └── terraform-apply-dev.yml
-│
-├── terraform/
-│   ├── bootstrap/
-│   ├── modules/
-│   │   ├── storage/
-│   │   ├── iam/
-│   │   ├── secrets/
-│   │   ├── logging/
-│   │   └── networking/
-│   │
-│   ├── environments/
-│   │   ├── dev/
-│   │   ├── test/
-│   │   └── prod/
-│   │
-│   └── examples/
-│       └── product-integration/
-│
-├── docs/
-│   ├── architecture.md
-│   ├── platform-boundaries.md
-│   ├── naming-and-tagging.md
-│   ├── security-model.md
-│   ├── future-roadmap.md
-│   └── decisions/
-│
-└── scripts/
-    ├── bootstrap_backend.sh
-    ├── plan_dev.sh
-    └── apply_dev.sh
+terraform fmt
+terraform validate
+terraform plan
+manual approval
+terraform apply
 ```
 
----
-
-## Development Sequence
-
-Recommended build order:
-
-1. Create repository skeleton and documentation.
-2. Add Terraform bootstrap backend.
-3. Add storage module.
-4. Add IAM module.
-5. Add logging module.
-6. Add secrets module.
-7. Compose the `dev` environment.
-8. Add Terraform CI workflow.
-9. Add documentation for platform/product integration.
-
-Do not start with every possible cloud service. Keep version 1 small and reliable.
-
----
-
-## What This Repository Should Not Do
-
-This repository should not create:
-
-- Snowflake provisioning
-- dbt models
-- Streamlit apps
-- Kafka
-- Kubernetes
-- data pipelines
-- product-specific infrastructure
-- business dashboards
-
-Those belong in the relevant data product repository.
-
----
-
-## Example Platform Flow
-
-```text
-1. Bootstrap Terraform backend
-2. Deploy shared platform infrastructure
-3. Export platform outputs
-4. Data product repository consumes outputs
-5. Data product repository deploys product-specific infrastructure
-```
-
----
-
-## Future Expansion (Post-V1)
-
-Post-V1 work may add integrations around the deployed platform foundation.
-
-Those additions should be documented in a later architecture decision before any new technical components are introduced.
-
----
+Bootstrap the remote state first, then deploy environment compositions. Product deployments should use product-owned CI/CD and stay within the platform-provided role and permission boundary.
 
 ## Design Principle
 
-The central design principle is:
-
-> Build the platform once, then allow many data products to be deployed on top of it.
-
-This keeps the architecture clean, reusable, and easier to grow over time.
+Build the shared platform once, expose stable outputs, and let product repositories deploy independently on top of it.

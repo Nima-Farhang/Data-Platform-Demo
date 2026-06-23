@@ -1,108 +1,29 @@
 # Environment Strategy
 
-## Purpose
+The platform supports `dev`, `test`, and `prod` so changes can be validated before production use.
 
-The platform supports multiple environments so changes can be tested safely before production use.
+## Principles
 
-V1 supports:
-
-- `dev`
-- `test`
-- `prod`
-
-## Environment Principles
-
-Each environment should:
+Each environment must:
 
 - use separate Terraform state
-- have independent configuration
-- use the same shared modules
-- follow the same naming and tagging standards
-- be deployable without depending on product-specific resources
+- keep independent configuration
+- use the same reusable modules
+- follow the same standards and security model
+- deploy without product-specific resources
 
-## Development Environment
+## Environment Roles
 
-`dev` is the first environment to compose and deploy.
+`dev` is the first validation environment for module composition, IAM assumptions, logging, secrets, naming, and tags.
 
-V1 is considered deployable when the `dev` environment applies cleanly with the required platform components.
+`test` mirrors the platform design with independent state and configuration for pre-production validation.
 
-`dev` is used to validate:
-
-- module composition
-- naming conventions
-- tags
-- IAM role assumptions
-- logging setup
-- secrets placeholder structure
-
-## Test Environment
-
-`test` should mirror the platform design used by `dev`, with independent configuration and state.
-
-It is intended for validation before production changes.
-
-`test` should not share Terraform state with `dev` or `prod`.
-
-## Production Environment
-
-`prod` represents the stable platform foundation.
-
-Production changes should be planned, reviewed, and approved before apply.
-
-`prod` should not depend on development-only resources.
-
-## State Separation
-
-Each environment must use separate Terraform state.
-
-State separation prevents changes in one environment from corrupting or unexpectedly modifying another environment.
-
-## Configuration Separation
-
-Each environment should have its own configuration values for:
-
-- environment name
-- region where applicable
-- naming suffixes where required
-- tags
-- environment-specific settings
-
-Shared defaults should be centralized where that keeps behavior consistent, but environment-specific values should remain explicit.
-
-## Deployment Order
-
-The platform should be built in this sequence:
-
-```text
-Bootstrap
-      |
-      v
-Networking
-      |
-      v
-Storage
-      |
-      v
-IAM
-      |
-      v
-Logging
-      |
-      v
-Secrets
-      |
-      v
-Environment Wiring
-```
+`prod` is the stable platform foundation. Production changes should be planned, reviewed, approved, and applied through the documented deployment process.
 
 ## Promotion Model
 
-Changes should be validated in `dev` first.
+Validate changes in `dev`, promote the same module changes through `test`, then deploy to `prod` with environment-specific configuration.
 
-After review, the same module changes can be promoted through `test` and then `prod` using environment-specific configuration.
+Shared defaults may be centralized when that keeps behavior consistent, but environment-specific values should remain explicit.
 
-## V1 Completion Standard
-
-V1 requires the `dev` environment to deploy cleanly.
-
-`test` and `prod` structure should exist as part of the repository strategy, but production readiness depends on review, approval, and operational controls.
+See [Architecture](architecture.md) for the dependency flow and [Standards](standards.md) for environment naming and tags.

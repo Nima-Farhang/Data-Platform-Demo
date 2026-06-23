@@ -43,4 +43,4 @@ Future versions may add custom KMS keys, private endpoints, multi-account isolat
 
 - `docs/security-model.md`
 - `docs/environment-strategy.md`
-- `docs/tagging-strategy.md`
+- `docs/standards.md`
