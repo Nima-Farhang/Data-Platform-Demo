@@ -11,8 +11,11 @@ Confirm the target platform environment has been deployed and collect:
 - AWS account ID and region
 - target environment: `dev`, `test`, or `prod`
 - approved method for reading platform outputs
+- product-scoped GitHub OIDC deployment role ARN for backend access, when supplied by bootstrap
 - product deployment role ARN or role creation guidance
 - product deployment permission boundary policy ARN
+- exact product resource name prefix
+- permitted product Terraform state-key pattern
 - naming prefix or product identifier
 - required tags
 - environment restrictions
@@ -39,7 +42,9 @@ The product repository should have its own Terraform state backend, CI/CD workfl
 
 4. Configure deployment access.
 
-   Use the exported product deployment role or create a product-specific deployment role with the exported permission boundary:
+   Product CI/CD should use the product-scoped GitHub OIDC deployment role exported by bootstrap when one is available. That role is only for product Terraform backend access and assuming the environment product deployment role. Do not use the broad platform CI/CD deployment role for product repositories.
+
+   Use the exported product deployment role for product Terraform applies, or create a product-specific deployment role with the exported permission boundary:
 
    ```hcl
    permissions_boundary = var.product_deployment_permission_boundary_policy_arn
@@ -92,10 +97,15 @@ s3://<bucket>/<environment>/products/<product-name>/...
 - `platform_kms_key_arn`
 - `product_deployment_role_arn`
 - `product_deployment_permission_boundary_policy_arn`
+- `product_resource_name_prefix`
+- `product_glue_database_name_prefix`
+- `product_terraform_state_key_pattern`
+- bootstrap `github_product_deployment_role_arns`, when product-scoped GitHub OIDC roles are configured
+- bootstrap `product_terraform_state_key_patterns_by_environment`
 - `platform_admin_role_arn`, for platform team use only
-- `cicd_role_arn`, for platform CI/CD use only
+- `cicd_role_arn` or bootstrap `github_deployment_role_arns`, for platform CI/CD use only
 
-Product repositories must not modify platform KMS policies, shared IAM admin roles, CloudTrail, or shared bucket administration.
+Product repositories must not modify platform KMS policies, shared IAM admin roles, CloudTrail, shared bucket administration, or networking. Product-owned AWS resources must use the exported `product_resource_name_prefix`; product Glue databases must use `product_glue_database_name_prefix`.
 
 ### Logging, Secrets, and Audit
 
@@ -156,16 +166,37 @@ locals {
 
 Only grant product repositories read access to platform state when that access is approved. Otherwise publish required outputs through CI/CD variables, parameter store, or another approved mechanism.
 
+## Product Terraform State
+
+Product state must stay in approved product key patterns and must not reuse platform environment state keys.
+
+Default approved pattern:
+
+```text
+environments/<environment>/products/*/*.tfstate
+```
+
+For Event-Driven-Lakehouse-Demo, the expected keys are:
+
+```text
+environments/<environment>/products/event-driven-lakehouse/aws.tfstate
+environments/<environment>/products/event-driven-lakehouse/snowflake.tfstate
+```
+
+Product-scoped GitHub OIDC roles created by bootstrap can access only the configured product state-key patterns and the Terraform lock table. They can assume the environment product deployment role; they cannot administer shared platform infrastructure.
+
 ## Security Checklist
 
 Before deployment, confirm:
 
-- product Terraform state is separate from platform state
+- product Terraform state is separate from platform state and uses the approved product state-key pattern
 - no real secrets are committed to Git
+- product CI/CD uses a product-scoped OIDC role, not the broad platform CI/CD role
 - product deployment roles use the platform permission boundary
-- product resources follow naming and tagging standards
+- product resources follow naming and tagging standards, including `product_resource_name_prefix`
+- product IAM roles keep the exported permission boundary attached
 - product IAM policies are least privilege
-- product resources do not alter shared platform buckets, KMS keys, IAM admin roles, CloudTrail, or platform logging
+- product resources do not alter shared platform buckets, KMS keys, IAM admin roles, CloudTrail, platform logging, or networking
 - product Glue databases, tables, jobs, and alarms are created in product Terraform
 
 ## Handoff Checklist

@@ -265,3 +265,18 @@ output "lakehouse_product_table_location_pattern" {
   description = "S3 location convention product repositories should use for Iceberg table roots."
   value       = module.lakehouse.product_table_location_pattern
 }
+
+output "product_resource_name_prefix" {
+  description = "Exact AWS resource name prefix product repositories must use for product-owned resources."
+  value       = module.iam.product_resource_name_prefix
+}
+
+output "product_glue_database_name_prefix" {
+  description = "Exact Glue database name prefix product repositories must use for product-owned Glue databases."
+  value       = module.iam.product_glue_database_name_prefix
+}
+
+output "product_terraform_state_key_pattern" {
+  description = "Approved Terraform state key pattern for product repositories in this environment."
+  value       = module.iam.product_terraform_state_key_pattern
+}

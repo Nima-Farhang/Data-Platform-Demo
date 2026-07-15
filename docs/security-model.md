@@ -14,25 +14,28 @@ The security model provides practical guardrails for the shared AWS platform fou
 
 ## Identity and Access
 
-The platform defines three role patterns:
+The platform defines four role patterns:
 
 - Platform Admin Role for controlled platform administration
 - CI/CD Deployment Role for GitHub Actions based platform deployment
-- Product Deployment Role for future product repository deployments
+- Product-scoped GitHub OIDC Deployment Role for product repository backend access and product-role assumption
+- Product Deployment Role for product repository Terraform applies
 
-GitHub OIDC can be created by the platform or supplied externally. Trust policies should be scoped to approved repositories, branches, or environments.
+GitHub OIDC can be created by the platform or supplied externally. Trust policies should be scoped to approved repositories, branches, or environments. Product repositories must use product-scoped OIDC deployment roles rather than broad platform-administration or platform CI/CD roles.
 
 ## Product Permission Boundary
 
-The product deployment permission boundary limits the maximum permissions product deployment roles can use. It blocks privilege escalation, broad IAM administration, CloudTrail tampering, shared bucket administration, and platform KMS administration.
+The product deployment permission boundary limits the maximum permissions product deployment roles can use. It permits product-scoped IoT Core topic rules, EventBridge buses/rules/targets and `PutEvents`, Lambda functions, Glue jobs and product catalog resources, API Gateway resources, CloudWatch logs/metrics/alarms/dashboards, and product IAM roles that use the same boundary and exported product resource prefix.
 
-Product repositories should attach the exported `product_deployment_permission_boundary_policy_arn` to product deployment roles they create.
+It blocks privilege escalation, broad IAM administration, CloudTrail tampering, shared bucket administration, networking administration, and platform KMS administration.
+
+Product repositories should attach the exported `product_deployment_permission_boundary_policy_arn` to product deployment roles they create. Product-created IAM roles must keep the same boundary attached.
 
 ## Data and State Protection
 
 Platform S3 buckets and Terraform state storage must use encryption, versioning where appropriate, lifecycle controls, and public access blocking.
 
-Terraform state can contain sensitive infrastructure metadata. Access should be limited to platform administrators and approved automation.
+Terraform state can contain sensitive infrastructure metadata. Access should be limited to platform administrators and approved automation. Product automation is limited to approved product state-key patterns such as `environments/<environment>/products/*/*.tfstate`; it must not read or write platform environment state keys.
 
 ## Secrets
 

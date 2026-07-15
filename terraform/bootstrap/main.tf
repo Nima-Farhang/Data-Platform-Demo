@@ -9,18 +9,31 @@ locals {
   region            = data.aws_region.current.name
 
   github_oidc_provider_url = "https://token.actions.githubusercontent.com"
-  github_environment_subjects_by_environment = {
+  github_oidc_subjects_by_environment = {
     for environment in var.deployment_environments : environment => flatten([
       for repository in var.github_allowed_repositories : [
         "repo:${var.github_organization}/${repository}:environment:${environment}"
       ]
     ])
   }
-  github_repository_subjects_by_environment = {
-    for environment in var.deployment_environments : environment => distinct(concat(
-      lookup(local.github_environment_subjects_by_environment, environment, []),
-      lookup(var.github_repository_subjects_by_environment, environment, [])
-    ))
+  github_product_deployment_environments = toset([
+    for environment in var.deployment_environments : environment
+    if length(local.github_oidc_subjects_by_environment[environment]) > 0
+  ])
+  product_terraform_state_key_patterns_by_environment = {
+    for environment in var.deployment_environments : environment => [
+      for pattern in var.product_terraform_state_key_patterns : replace(pattern, "<environment>", environment)
+    ]
+  }
+  product_terraform_state_object_arns_by_environment = {
+    for environment in var.deployment_environments : environment => [
+      for pattern in local.product_terraform_state_key_patterns_by_environment[environment] : "${aws_s3_bucket.terraform_state.arn}/${pattern}"
+    ]
+  }
+  product_terraform_state_list_prefixes_by_environment = {
+    for environment in var.deployment_environments : environment => distinct([
+      for pattern in local.product_terraform_state_key_patterns_by_environment[environment] : split("*", pattern)[0]
+    ])
   }
 
   common_tags = merge(
@@ -135,7 +148,7 @@ data "aws_iam_policy_document" "github_deployment_assume_role" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = local.github_repository_subjects_by_environment[each.key]
+      values   = local.github_oidc_subjects_by_environment[each.key]
     }
   }
 }
@@ -229,7 +242,7 @@ resource "aws_iam_role" "github_deployment" {
 
   lifecycle {
     precondition {
-      condition     = length(local.github_repository_subjects_by_environment[each.key]) > 0
+      condition     = length(local.github_oidc_subjects_by_environment[each.key]) > 0
       error_message = "Configure at least one GitHub OIDC subject for each deployment environment."
     }
   }
@@ -250,4 +263,120 @@ resource "aws_iam_role_policy" "github_deployment" {
   name   = "${var.project}-${each.key}-cicd-deployment-policy"
   role   = aws_iam_role.github_deployment[each.key].id
   policy = data.aws_iam_policy_document.github_deployment[each.key].json
+}
+
+
+data "aws_iam_policy_document" "github_product_deployment_assume_role" {
+  for_each = local.github_product_deployment_environments
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = local.github_oidc_subjects_by_environment[each.key]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "github_product_deployment" {
+  for_each = local.github_product_deployment_environments
+
+  statement {
+    sid    = "ListProductTerraformState"
+    effect = "Allow"
+    actions = [
+      "s3:GetBucketLocation",
+      "s3:ListBucket"
+    ]
+    resources = [aws_s3_bucket.terraform_state.arn]
+
+    condition {
+      test     = "StringLike"
+      variable = "s3:prefix"
+      values   = local.product_terraform_state_list_prefixes_by_environment[each.key]
+    }
+  }
+
+  statement {
+    sid    = "UseProductTerraformStateObjects"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ]
+    resources = local.product_terraform_state_object_arns_by_environment[each.key]
+  }
+
+  statement {
+    sid    = "UseTerraformStateLock"
+    effect = "Allow"
+    actions = [
+      "dynamodb:DescribeTable",
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:UpdateItem"
+    ]
+    resources = [aws_dynamodb_table.terraform_locks.arn]
+  }
+
+  statement {
+    sid    = "ReadProductDeploymentMetadata"
+    effect = "Allow"
+    actions = [
+      "sts:GetCallerIdentity",
+      "iam:GetRole",
+      "iam:ListAccountAliases"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid     = "AssumeProductDeploymentRole"
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    resources = [
+      "arn:aws:iam::${local.account_id}:role/${var.project}-${each.key}-product-deployment-role"
+    ]
+  }
+}
+
+resource "aws_iam_role" "github_product_deployment" {
+  for_each = local.github_product_deployment_environments
+
+  name               = "${var.project}-${each.key}-product-cicd-deployment-role"
+  assume_role_policy = data.aws_iam_policy_document.github_product_deployment_assume_role[each.key].json
+  description        = "GitHub Actions product deployment role for ${each.key}; limited to product Terraform state and product deployment role assumption."
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name        = "${var.project}-${each.key}-product-cicd-deployment-role"
+      Environment = each.key
+      Role        = "product-cicd-deployment"
+    }
+  )
+}
+
+resource "aws_iam_role_policy" "github_product_deployment" {
+  for_each = local.github_product_deployment_environments
+
+  name   = "${var.project}-${each.key}-product-cicd-deployment-policy"
+  role   = aws_iam_role.github_product_deployment[each.key].id
+  policy = data.aws_iam_policy_document.github_product_deployment[each.key].json
 }

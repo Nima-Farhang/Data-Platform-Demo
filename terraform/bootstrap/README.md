@@ -18,8 +18,11 @@ This bootstrap layer creates:
 - S3 public access blocking
 - GitHub Actions OIDC provider
 - GitHub Actions CI/CD deployment roles for `dev`, `test`, and `prod`
+- Optional product-scoped GitHub Actions OIDC deployment roles for product repositories
 
-It does not create networking resources.
+It does not create networking resources or product workload resources.
+
+Product-scoped deployment roles are intentionally separate from platform CI/CD deployment roles. They can access only configured product Terraform state-key patterns, use the shared lock table, read minimal identity metadata, and assume the environment product deployment role.
 
 ## Usage
 

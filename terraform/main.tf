@@ -50,6 +50,7 @@ module "iam" {
   platform_admin_principal_arns     = var.platform_admin_principal_arns
   product_deployment_principal_arns = var.product_deployment_principal_arns
   product_resource_name_prefix      = var.product_resource_name_prefix
+  product_glue_database_name_prefix = var.product_glue_database_name_prefix
   platform_catalog_database_name    = var.platform_catalog_database_name
   owner                             = var.owner
   cost_center                       = var.cost_center

@@ -25,4 +25,17 @@ output "product_deployment_permission_boundary_policy_arn" {
   value       = aws_iam_policy.product_deployment_permission_boundary.arn
 }
 
+output "product_resource_name_prefix" {
+  description = "Exact AWS resource name prefix product repositories must use for product-owned resources governed by the permission boundary."
+  value       = local.product_resource_name_prefix
+}
 
+output "product_glue_database_name_prefix" {
+  description = "Exact Glue database name prefix product repositories must use for product-owned Glue databases."
+  value       = local.product_glue_database_name_prefix
+}
+
+output "product_terraform_state_key_pattern" {
+  description = "Approved Terraform state key pattern for product repositories in this environment."
+  value       = local.product_terraform_state_key_pattern
+}

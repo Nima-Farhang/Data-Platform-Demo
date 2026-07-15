@@ -10,12 +10,27 @@ Use this base pattern where the AWS service allows it:
 <project>-<environment>-<component>
 ```
 
+Product-owned AWS resources use the exported product prefix:
+
+```text
+<project>-<environment>-product-<product-name>-<component>
+```
+
+For reusable permission-boundary matching, the platform exports this as `product_resource_name_prefix`.
+
 Examples:
 
 ```text
 data-platform-dev-vpc
 data-platform-dev-raw
 data-platform-prod-logs
+data-platform-dev-product-event-driven-lakehouse-ingestion
+```
+
+Product Glue database names use the exported `product_glue_database_name_prefix`, for example:
+
+```text
+data_platform_dev_event_driven_lakehouse
 ```
 
 Use these values consistently:

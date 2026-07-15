@@ -83,3 +83,14 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "product_glue_database_name_prefix" {
+  description = "Glue database name prefix that product-owned Glue databases must use. Defaults to <project>_<environment>_."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.product_glue_database_name_prefix == null || can(regex("^[a-z0-9_]+_$", var.product_glue_database_name_prefix))
+    error_message = "Product Glue database name prefix must use lowercase letters, numbers, and underscores, and must end with an underscore."
+  }
+}

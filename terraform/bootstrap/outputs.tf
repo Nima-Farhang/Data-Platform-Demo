@@ -35,7 +35,13 @@ output "github_deployment_role_arns" {
   value       = { for environment, role in aws_iam_role.github_deployment : environment => role.arn }
 }
 
-output "github_repository_subjects_by_environment" {
-  description = "GitHub OIDC subject patterns allowed to assume each bootstrap deployment role."
-  value       = local.github_repository_subjects_by_environment
+
+output "github_product_deployment_role_arns" {
+  description = "Map of product-scoped GitHub Actions deployment role ARNs by environment. Product repositories use these for backend access and then assume the product deployment role."
+  value       = { for environment, role in aws_iam_role.github_product_deployment : environment => role.arn }
+}
+
+output "product_terraform_state_key_patterns_by_environment" {
+  description = "Approved product Terraform state key patterns by environment."
+  value       = local.product_terraform_state_key_patterns_by_environment
 }

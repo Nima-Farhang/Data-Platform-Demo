@@ -72,8 +72,17 @@ variable "github_allowed_repositories" {
   type        = list(string)
 }
 
-variable "github_repository_subjects_by_environment" {
-  description = "Additional explicit GitHub OIDC subject patterns allowed per environment. Prefer github_organization, github_allowed_repositories, and deployment_environments for normal use."
-  type        = map(list(string))
-  default     = {}
+variable "product_terraform_state_key_patterns" {
+  description = "Terraform state key patterns product-scoped GitHub OIDC roles may access. Use <environment> as the environment placeholder."
+  type        = list(string)
+  default = [
+    "environments/<environment>/products/*/*.tfstate"
+  ]
+
+  validation {
+    condition = alltrue([
+      for pattern in var.product_terraform_state_key_patterns : startswith(pattern, "environments/<environment>/products/") && endswith(pattern, ".tfstate")
+    ])
+    error_message = "Product Terraform state key patterns must start with environments/<environment>/products/ and end with .tfstate."
+  }
 }

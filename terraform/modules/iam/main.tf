@@ -18,6 +18,9 @@ locals {
   ]
 
   product_resource_name_prefix                = var.product_resource_name_prefix != null ? var.product_resource_name_prefix : "${local.name_prefix}-product-"
+  product_service_safe_name_prefix            = replace(local.product_resource_name_prefix, "-", "_")
+  product_glue_database_name_prefix           = var.product_glue_database_name_prefix != null ? var.product_glue_database_name_prefix : "${replace(var.project, "-", "_")}_${var.environment}_"
+  product_terraform_state_key_pattern         = "environments/${var.environment}/products/*/*.tfstate"
   product_permission_boundary_policy_name     = "${local.name_prefix}-product-deployment-permission-boundary"
   product_permission_boundary_policy_arn      = "arn:aws:iam::${local.account_id}:policy/${local.product_permission_boundary_policy_name}"
   product_permission_boundary_tag_key         = "DataPlatformScope"
@@ -238,12 +241,147 @@ data "aws_iam_policy_document" "platform_admin" {
 
 data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   statement {
+    sid    = "ReadProductDeploymentMetadata"
+    effect = "Allow"
+    actions = [
+      "apigateway:GET",
+      "cloudwatch:Describe*",
+      "cloudwatch:Get*",
+      "cloudwatch:List*",
+      "ec2:Describe*",
+      "events:List*",
+      "glue:Get*",
+      "glue:List*",
+      "iam:Get*",
+      "iam:List*",
+      "iot:DescribeEndpoint",
+      "iot:List*",
+      "lambda:Get*",
+      "lambda:List*",
+      "logs:Describe*",
+      "logs:List*",
+      "s3:GetAccountPublicAccessBlock",
+      "s3:GetBucketLocation",
+      "s3:ListAllMyBuckets",
+      "sts:GetCallerIdentity"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "AllowProductIotCore"
+    effect = "Allow"
+    actions = [
+      "iot:CreateTopicRule",
+      "iot:DeleteTopicRule",
+      "iot:DisableTopicRule",
+      "iot:EnableTopicRule",
+      "iot:GetTopicRule",
+      "iot:ListTopicRules",
+      "iot:ListTagsForResource",
+      "iot:ReplaceTopicRule",
+      "iot:TagResource",
+      "iot:UntagResource"
+    ]
+    resources = [
+      "arn:aws:iot:${local.region}:${local.account_id}:rule/${local.product_resource_name_prefix}*",
+      "arn:aws:iot:${local.region}:${local.account_id}:rule/${local.product_service_safe_name_prefix}*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowProductEventBridgeBuses"
+    effect = "Allow"
+    actions = [
+      "events:CreateEventBus",
+      "events:DeleteEventBus",
+      "events:DescribeEventBus",
+      "events:ListTagsForResource",
+      "events:PutEvents",
+      "events:TagResource",
+      "events:UntagResource"
+    ]
+    resources = [
+      "arn:aws:events:${local.region}:${local.account_id}:event-bus/${local.product_resource_name_prefix}*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowProductGlueCatalog"
+    effect = "Allow"
+    actions = [
+      "glue:BatchCreatePartition",
+      "glue:BatchDeletePartition",
+      "glue:BatchGetPartition",
+      "glue:CreateDatabase",
+      "glue:CreatePartition",
+      "glue:CreateTable",
+      "glue:DeleteDatabase",
+      "glue:DeletePartition",
+      "glue:DeleteTable",
+      "glue:GetDatabase",
+      "glue:GetDatabases",
+      "glue:GetPartition",
+      "glue:GetPartitions",
+      "glue:GetTable",
+      "glue:GetTables",
+      "glue:TagResource",
+      "glue:UntagResource",
+      "glue:UpdateDatabase",
+      "glue:UpdatePartition",
+      "glue:UpdateTable"
+    ]
+    resources = [
+      "arn:aws:glue:${local.region}:${local.account_id}:catalog",
+      "arn:aws:glue:${local.region}:${local.account_id}:database/${local.product_glue_database_name_prefix}*",
+      "arn:aws:glue:${local.region}:${local.account_id}:table/${local.product_glue_database_name_prefix}*/*"
+    ]
+  }
+
+  statement {
+    sid    = "AllowProductMonitoring"
+    effect = "Allow"
+    actions = [
+      "cloudwatch:DeleteAlarms",
+      "cloudwatch:DeleteDashboards",
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:GetDashboard",
+      "cloudwatch:ListDashboards",
+      "cloudwatch:PutDashboard",
+      "cloudwatch:PutMetricAlarm",
+      "cloudwatch:TagResource",
+      "cloudwatch:UntagResource"
+    ]
+    resources = [
+      "arn:aws:cloudwatch:${local.region}:${local.account_id}:alarm:${local.product_resource_name_prefix}*",
+      "arn:aws:cloudwatch::${local.account_id}:dashboard/${local.product_resource_name_prefix}*"
+    ]
+  }
+
+  statement {
+    sid       = "AllowProductMetrics"
+    effect    = "Allow"
+    actions   = ["cloudwatch:PutMetricData"]
+    resources = ["*"]
+
+    condition {
+      test     = "StringLike"
+      variable = "cloudwatch:namespace"
+      values = [
+        "${local.product_resource_name_prefix}*",
+        "DataPlatform/Products/*"
+      ]
+    }
+  }
+
+  statement {
     sid    = "AllowProductComputeAndEvents"
     effect = "Allow"
     actions = [
       "events:*Rule",
       "events:*Targets*",
       "events:DescribeRule",
+      "events:ListRules",
       "events:ListTargetsByRule",
       "events:TagResource",
       "events:UntagResource",
@@ -262,7 +400,9 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
       "lambda:UntagResource"
     ]
     resources = [
+      "arn:aws:events:${local.region}:${local.account_id}:event-bus/${local.product_resource_name_prefix}*",
       "arn:aws:events:${local.region}:${local.account_id}:rule/${local.product_resource_name_prefix}*",
+      "arn:aws:events:${local.region}:${local.account_id}:rule/${local.product_resource_name_prefix}*/*",
       "arn:aws:events:${local.region}:${local.account_id}:rule/*/${local.product_resource_name_prefix}*",
       "arn:aws:glue:${local.region}:${local.account_id}:job/${local.product_resource_name_prefix}*",
       "arn:aws:lambda:${local.region}:${local.account_id}:function:${local.product_resource_name_prefix}*"
@@ -459,6 +599,71 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
     ]
     resources = concat(values(var.platform_bucket_arns), local.bucket_object_arns)
   }
+
+  statement {
+    sid    = "DenyNetworkingAdmin"
+    effect = "Deny"
+    actions = [
+      "ec2:AcceptVpcEndpointConnections",
+      "ec2:AssociateRouteTable",
+      "ec2:AttachInternetGateway",
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:CreateInternetGateway",
+      "ec2:CreateNatGateway",
+      "ec2:CreateNetworkAcl*",
+      "ec2:CreateRoute",
+      "ec2:CreateRouteTable",
+      "ec2:CreateSecurityGroup",
+      "ec2:CreateSubnet",
+      "ec2:CreateVpc",
+      "ec2:CreateVpcEndpoint*",
+      "ec2:DeleteInternetGateway",
+      "ec2:DeleteNatGateway",
+      "ec2:DeleteNetworkAcl*",
+      "ec2:DeleteRoute",
+      "ec2:DeleteRouteTable",
+      "ec2:DeleteSecurityGroup",
+      "ec2:DeleteSubnet",
+      "ec2:DeleteVpc",
+      "ec2:DeleteVpcEndpoints",
+      "ec2:DetachInternetGateway",
+      "ec2:DisassociateRouteTable",
+      "ec2:ModifySubnetAttribute",
+      "ec2:ModifyVpcAttribute",
+      "ec2:ModifyVpcEndpoint",
+      "ec2:RejectVpcEndpointConnections",
+      "ec2:ReplaceRoute*",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupIngress"
+    ]
+    resources = ["*"]
+  }
+}
+
+check "product_deployment_permission_boundary_contract" {
+  assert {
+    condition = alltrue([
+      for required_sid in [
+        "ReadProductDeploymentMetadata",
+        "AllowProductIotCore",
+        "AllowProductEventBridgeBuses",
+        "AllowProductComputeAndEvents",
+        "AllowProductGlueCatalog",
+        "AllowProductMonitoring",
+        "AllowTaggedProductApiGatewayCreate",
+        "AllowProductIamRoles",
+        "RequireBoundaryOnProductRoles",
+        "DenyUnsafeIam",
+        "DenyAuditAndKmsAdmin",
+        "DenySharedBucketAdmin",
+        "DenyNetworkingAdmin"
+        ] : contains([
+          for statement in jsondecode(data.aws_iam_policy_document.product_deployment_permission_boundary.json).Statement : statement.Sid
+      ], required_sid)
+    ])
+    error_message = "Product deployment permission boundary must include the required product allow statements and platform guardrail denies."
+  }
 }
 
 resource "aws_iam_policy" "product_deployment_permission_boundary" {
@@ -476,42 +681,34 @@ resource "aws_iam_policy" "product_deployment_permission_boundary" {
 }
 
 data "aws_iam_policy_document" "product_deployment" {
+  source_policy_documents = [data.aws_iam_policy_document.product_deployment_permission_boundary.json]
+
   statement {
-    sid    = "UseSharedPlatformBuckets"
+    sid    = "ReadDeploymentMetadata"
     effect = "Allow"
     actions = [
+      "apigateway:GET",
+      "cloudwatch:Describe*",
+      "cloudwatch:Get*",
+      "cloudwatch:List*",
+      "ec2:Describe*",
+      "events:List*",
+      "glue:Get*",
+      "glue:List*",
+      "iam:Get*",
+      "iam:List*",
+      "iot:DescribeEndpoint",
+      "iot:List*",
+      "lambda:Get*",
+      "lambda:List*",
+      "logs:Describe*",
+      "logs:List*",
+      "s3:GetAccountPublicAccessBlock",
       "s3:GetBucketLocation",
-      "s3:GetObject",
-      "s3:ListBucket",
-      "s3:PutObject"
+      "s3:ListAllMyBuckets",
+      "sts:GetCallerIdentity"
     ]
-    resources = concat(values(var.platform_bucket_arns), local.bucket_object_arns)
-  }
-
-  statement {
-    sid    = "WriteProductDeploymentLogs"
-    effect = "Allow"
-    actions = [
-      "logs:CreateLogStream",
-      "logs:DescribeLogStreams",
-      "logs:PutLogEvents"
-    ]
-    resources = [
-      "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/${local.name_prefix}/products/*",
-      "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/${local.name_prefix}/products/*:*"
-    ]
-  }
-
-  statement {
-    sid    = "ReadProductDeploymentSecrets"
-    effect = "Allow"
-    actions = [
-      "secretsmanager:DescribeSecret",
-      "secretsmanager:GetSecretValue"
-    ]
-    resources = [
-      "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}/products/*"
-    ]
+    resources = ["*"]
   }
 }
 
