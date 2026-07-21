@@ -26,6 +26,12 @@ variable "state_bucket_suffix" {
   }
 }
 
+variable "force_destroy_buckets" {
+  description = "Allow Terraform to delete the non-empty versioned state bucket during an intentional final teardown."
+  type        = bool
+  default     = false
+}
+
 variable "owner" {
   description = "Team or role responsible for the bootstrap resources."
   type        = string

@@ -29,6 +29,12 @@ variable "account_suffix" {
   }
 }
 
+variable "force_destroy_buckets" {
+  description = "Allow Terraform to delete non-empty versioned platform buckets during an intentional teardown."
+  type        = bool
+  default     = false
+}
+
 variable "owner" {
   description = "Team or role responsible for the storage resources."
   type        = string

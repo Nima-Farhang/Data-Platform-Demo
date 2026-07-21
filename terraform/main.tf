@@ -33,6 +33,7 @@ module "storage" {
   project                        = var.project
   environment                    = var.environment
   account_suffix                 = var.account_suffix
+  force_destroy_buckets          = var.force_destroy_buckets
   kms_key_arn                    = module.kms.key_arn
   cloudtrail_log_prefix          = var.cloudtrail_log_prefix
   cloudtrail_log_expiration_days = var.cloudtrail_log_expiration_days

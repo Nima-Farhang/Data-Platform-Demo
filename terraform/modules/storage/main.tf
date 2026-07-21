@@ -23,7 +23,8 @@ locals {
 resource "aws_s3_bucket" "platform" {
   for_each = local.bucket_names
 
-  bucket = each.value
+  bucket        = each.value
+  force_destroy = var.force_destroy_buckets
 
   tags = merge(
     local.common_tags,

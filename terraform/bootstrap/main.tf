@@ -48,7 +48,8 @@ locals {
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = local.state_bucket_name
+  bucket        = local.state_bucket_name
+  force_destroy = var.force_destroy_buckets
 
   lifecycle {
     precondition {
