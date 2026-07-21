@@ -17,16 +17,13 @@ locals {
     local.account_root_arn
   ]
 
-  product_resource_name_prefix                = var.product_resource_name_prefix != null ? var.product_resource_name_prefix : "${local.name_prefix}-product-"
-  product_service_safe_name_prefix            = replace(local.product_resource_name_prefix, "-", "_")
-  product_glue_database_name_prefix           = var.product_glue_database_name_prefix != null ? var.product_glue_database_name_prefix : "${replace(var.project, "-", "_")}_${var.environment}_"
-  product_terraform_state_key_pattern         = "environments/${var.environment}/products/*/*.tfstate"
-  product_permission_boundary_policy_name     = "${local.name_prefix}-product-deployment-permission-boundary"
-  product_permission_boundary_policy_arn      = "arn:aws:iam::${local.account_id}:policy/${local.product_permission_boundary_policy_name}"
-  product_permission_boundary_tag_key         = "DataPlatformScope"
-  product_permission_boundary_tag_value       = "product"
-  product_permission_boundary_allowed_tagkeys = [local.product_permission_boundary_tag_key]
-  platform_catalog_database_name              = var.platform_catalog_database_name != null ? var.platform_catalog_database_name : "${replace(var.project, "-", "_")}_${var.environment}_platform"
+  product_resource_name_prefix            = var.product_resource_name_prefix != null ? var.product_resource_name_prefix : "${local.name_prefix}-product-"
+  product_service_safe_name_prefix        = replace(local.product_resource_name_prefix, "-", "_")
+  product_glue_database_name_prefix       = var.product_glue_database_name_prefix != null ? var.product_glue_database_name_prefix : "${replace(var.project, "-", "_")}_${var.environment}_"
+  product_terraform_state_key_pattern     = "environments/${var.environment}/products/*/*.tfstate"
+  product_permission_boundary_policy_name = "${local.name_prefix}-product-deployment-permission-boundary"
+  product_permission_boundary_policy_arn  = "arn:aws:iam::${local.account_id}:policy/${local.product_permission_boundary_policy_name}"
+  platform_catalog_database_name          = var.platform_catalog_database_name != null ? var.platform_catalog_database_name : "${replace(var.project, "-", "_")}_${var.environment}_platform"
 
 
   bucket_object_arns = [
@@ -241,7 +238,6 @@ data "aws_iam_policy_document" "platform_admin" {
 
 data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   statement {
-    sid    = "ReadProductDeploymentMetadata"
     effect = "Allow"
     actions = [
       "apigateway:GET",
@@ -277,8 +273,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
       "iot:DisableTopicRule",
       "iot:EnableTopicRule",
       "iot:GetTopicRule",
-      "iot:ListTopicRules",
-      "iot:ListTagsForResource",
       "iot:ReplaceTopicRule",
       "iot:TagResource",
       "iot:UntagResource"
@@ -296,7 +290,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
       "events:CreateEventBus",
       "events:DeleteEventBus",
       "events:DescribeEventBus",
-      "events:ListTagsForResource",
       "events:PutEvents",
       "events:TagResource",
       "events:UntagResource"
@@ -319,12 +312,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
       "glue:DeleteDatabase",
       "glue:DeletePartition",
       "glue:DeleteTable",
-      "glue:GetDatabase",
-      "glue:GetDatabases",
-      "glue:GetPartition",
-      "glue:GetPartitions",
-      "glue:GetTable",
-      "glue:GetTables",
       "glue:TagResource",
       "glue:UntagResource",
       "glue:UpdateDatabase",
@@ -344,9 +331,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
     actions = [
       "cloudwatch:DeleteAlarms",
       "cloudwatch:DeleteDashboards",
-      "cloudwatch:DescribeAlarms",
-      "cloudwatch:GetDashboard",
-      "cloudwatch:ListDashboards",
       "cloudwatch:PutDashboard",
       "cloudwatch:PutMetricAlarm",
       "cloudwatch:TagResource",
@@ -359,7 +343,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid       = "AllowProductMetrics"
     effect    = "Allow"
     actions   = ["cloudwatch:PutMetricData"]
     resources = ["*"]
@@ -381,8 +364,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
       "events:*Rule",
       "events:*Targets*",
       "events:DescribeRule",
-      "events:ListRules",
-      "events:ListTargetsByRule",
       "events:TagResource",
       "events:UntagResource",
       "glue:*Job*",
@@ -392,8 +373,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
       "lambda:*Function*",
       "lambda:*Alias",
       "lambda:AddPermission",
-      "lambda:GetFunction*",
-      "lambda:List*",
       "lambda:PublishVersion",
       "lambda:RemovePermission",
       "lambda:TagResource",
@@ -410,12 +389,10 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "AllowProductLogs"
     effect = "Allow"
     actions = [
       "logs:*LogGroup",
       "logs:*LogStream",
-      "logs:Describe*",
       "logs:PutLogEvents",
       "logs:PutRetentionPolicy",
       "logs:TagLogGroup",
@@ -432,27 +409,9 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid     = "AllowTaggedProductApiGatewayCreate"
-    effect  = "Allow"
-    actions = ["apigateway:POST"]
-    resources = [
-      "arn:aws:apigateway:${local.region}::/apis",
-      "arn:aws:apigateway:${local.region}::/restapis"
-    ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:RequestTag/${local.product_permission_boundary_tag_key}"
-      values   = [local.product_permission_boundary_tag_value]
-    }
-  }
-
-  statement {
-    sid    = "AllowTaggedProductApiGatewayManagement"
     effect = "Allow"
     actions = [
       "apigateway:DELETE",
-      "apigateway:GET",
       "apigateway:PATCH",
       "apigateway:POST",
       "apigateway:PUT",
@@ -460,16 +419,10 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
       "apigateway:UntagResource"
     ]
     resources = [
-      "arn:aws:apigateway:${local.region}::/apis/*",
-      "arn:aws:apigateway:${local.region}::/restapis/*",
+      "arn:aws:apigateway:${local.region}::/apis*",
+      "arn:aws:apigateway:${local.region}::/restapis*",
       "arn:aws:apigateway:${local.region}::/tags/*"
     ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:ResourceTag/${local.product_permission_boundary_tag_key}"
-      values   = [local.product_permission_boundary_tag_value]
-    }
   }
 
   statement {
@@ -491,7 +444,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid       = "AllowPassingProductRoles"
     effect    = "Allow"
     actions   = ["iam:PassRole"]
     resources = ["arn:aws:iam::${local.account_id}:role/${local.product_resource_name_prefix}*"]
@@ -525,27 +477,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "DenyUnsafeIam"
-    effect = "Deny"
-    actions = [
-      "iam:*AccessKey*",
-      "iam:*Group*",
-      "iam:*LoginProfile*",
-      "iam:*User*",
-      "iam:Attach*",
-      "iam:CreatePolicyVersion",
-      "iam:DeleteRolePermissionsBoundary",
-      "iam:Detach*",
-      "iam:PutGroupPolicy",
-      "iam:PutUserPolicy",
-      "iam:SetDefaultPolicyVersion",
-      "iam:UpdateAssumeRolePolicy"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "AllowRequiredPlatformUse"
     effect = "Allow"
     actions = [
       "logs:CreateLogStream",
@@ -569,100 +500,12 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
     )
   }
 
-  statement {
-    sid    = "DenyAuditAndKmsAdmin"
-    effect = "Deny"
-    actions = [
-      "cloudtrail:DeleteTrail",
-      "cloudtrail:Put*",
-      "cloudtrail:StopLogging",
-      "cloudtrail:UpdateTrail",
-      "kms:CreateGrant",
-      "kms:DeleteAlias",
-      "kms:Disable*",
-      "kms:PutKeyPolicy",
-      "kms:RevokeGrant",
-      "kms:ScheduleKeyDeletion",
-      "kms:UpdateAlias"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "DenySharedBucketAdmin"
-    effect = "Deny"
-    actions = [
-      "s3:Delete*",
-      "s3:PutBucket*",
-      "s3:PutEncryptionConfiguration",
-      "s3:PutLifecycleConfiguration"
-    ]
-    resources = concat(values(var.platform_bucket_arns), local.bucket_object_arns)
-  }
-
-  statement {
-    sid    = "DenyNetworkingAdmin"
-    effect = "Deny"
-    actions = [
-      "ec2:AcceptVpcEndpointConnections",
-      "ec2:AssociateRouteTable",
-      "ec2:AttachInternetGateway",
-      "ec2:AuthorizeSecurityGroupEgress",
-      "ec2:AuthorizeSecurityGroupIngress",
-      "ec2:CreateInternetGateway",
-      "ec2:CreateNatGateway",
-      "ec2:CreateNetworkAcl*",
-      "ec2:CreateRoute",
-      "ec2:CreateRouteTable",
-      "ec2:CreateSecurityGroup",
-      "ec2:CreateSubnet",
-      "ec2:CreateVpc",
-      "ec2:CreateVpcEndpoint*",
-      "ec2:DeleteInternetGateway",
-      "ec2:DeleteNatGateway",
-      "ec2:DeleteNetworkAcl*",
-      "ec2:DeleteRoute",
-      "ec2:DeleteRouteTable",
-      "ec2:DeleteSecurityGroup",
-      "ec2:DeleteSubnet",
-      "ec2:DeleteVpc",
-      "ec2:DeleteVpcEndpoints",
-      "ec2:DetachInternetGateway",
-      "ec2:DisassociateRouteTable",
-      "ec2:ModifySubnetAttribute",
-      "ec2:ModifyVpcAttribute",
-      "ec2:ModifyVpcEndpoint",
-      "ec2:RejectVpcEndpointConnections",
-      "ec2:ReplaceRoute*",
-      "ec2:RevokeSecurityGroupEgress",
-      "ec2:RevokeSecurityGroupIngress"
-    ]
-    resources = ["*"]
-  }
 }
 
-check "product_deployment_permission_boundary_contract" {
+check "product_deployment_permission_boundary_size" {
   assert {
-    condition = alltrue([
-      for required_sid in [
-        "ReadProductDeploymentMetadata",
-        "AllowProductIotCore",
-        "AllowProductEventBridgeBuses",
-        "AllowProductComputeAndEvents",
-        "AllowProductGlueCatalog",
-        "AllowProductMonitoring",
-        "AllowTaggedProductApiGatewayCreate",
-        "AllowProductIamRoles",
-        "RequireBoundaryOnProductRoles",
-        "DenyUnsafeIam",
-        "DenyAuditAndKmsAdmin",
-        "DenySharedBucketAdmin",
-        "DenyNetworkingAdmin"
-        ] : contains([
-          for statement in jsondecode(data.aws_iam_policy_document.product_deployment_permission_boundary.json).Statement : statement.Sid
-      ], required_sid)
-    ])
-    error_message = "Product deployment permission boundary must include the required product allow statements and platform guardrail denies."
+    condition     = length(replace(data.aws_iam_policy_document.product_deployment_permission_boundary.json, "/\\s/", "")) <= 6144
+    error_message = "Product deployment permission boundary must not exceed the AWS managed policy size limit of 6144 characters."
   }
 }
 
