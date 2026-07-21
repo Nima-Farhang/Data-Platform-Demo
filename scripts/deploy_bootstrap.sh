@@ -60,6 +60,11 @@ cd "${BOOTSTRAP_DIR}"
 # the remote state bucket and lock table used by environment deployments.
 terraform init
 
+# Some mounted development workspaces can preserve downloaded provider files
+# without their executable bit. Terraform cannot load those providers until the
+# permission is restored.
+find .terraform/providers -type f -name 'terraform-provider-*' ! -perm -u=x -exec chmod u+x {} +
+
 PROJECT="$(terraform_value "var.project")"
 STATE_BUCKET_SUFFIX="$(tfvars_value "state_bucket_suffix")"
 AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text 2>/dev/null || true)"

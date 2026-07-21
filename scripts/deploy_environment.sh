@@ -44,6 +44,11 @@ cd "${TERRAFORM_DIR}"
 # Initialize Terraform using the environment-specific backend configuration.
 terraform init -reconfigure -backend-config="${BACKEND_CONFIG}"
 
+# Some mounted development workspaces can preserve downloaded provider files
+# without their executable bit. Terraform cannot load those providers until the
+# permission is restored.
+find .terraform/providers -type f -name 'terraform-provider-*' ! -perm -u=x -exec chmod u+x {} +
+
 # Format Terraform files.
 terraform fmt -recursive
 
