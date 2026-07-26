@@ -265,7 +265,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "AllowProductIotCore"
     effect = "Allow"
     actions = [
       "iot:CreateTopicRule",
@@ -284,7 +283,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "AllowProductEventBridgeBuses"
     effect = "Allow"
     actions = [
       "events:CreateEventBus",
@@ -300,7 +298,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "AllowProductGlueCatalog"
     effect = "Allow"
     actions = [
       "glue:BatchCreatePartition",
@@ -326,7 +323,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "AllowProductMonitoring"
     effect = "Allow"
     actions = [
       "cloudwatch:DeleteAlarms",
@@ -358,7 +354,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "AllowProductComputeAndEvents"
     effect = "Allow"
     actions = [
       "events:*Rule",
@@ -426,7 +421,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "AllowProductIamRoles"
     effect = "Allow"
     actions = [
       "iam:CreateRole",
@@ -461,7 +455,6 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
   }
 
   statement {
-    sid    = "RequireBoundaryOnProductRoles"
     effect = "Deny"
     actions = [
       "iam:CreateRole",
@@ -502,17 +495,17 @@ data "aws_iam_policy_document" "product_deployment_permission_boundary" {
 
 }
 
-check "product_deployment_permission_boundary_size" {
-  assert {
-    condition     = length(replace(data.aws_iam_policy_document.product_deployment_permission_boundary.json, "/\\s/", "")) <= 6144
-    error_message = "Product deployment permission boundary must not exceed the AWS managed policy size limit of 6144 characters."
-  }
-}
-
 resource "aws_iam_policy" "product_deployment_permission_boundary" {
   name        = local.product_permission_boundary_policy_name
   description = "Permission boundary for product deployment roles in the ${var.environment} data platform."
   policy      = data.aws_iam_policy_document.product_deployment_permission_boundary.json
+
+  lifecycle {
+    precondition {
+      condition     = length(replace(data.aws_iam_policy_document.product_deployment_permission_boundary.json, "/\\s/", "")) <= 6144
+      error_message = "Product deployment permission boundary must not exceed the AWS managed policy size limit of 6144 characters."
+    }
+  }
 
   tags = merge(
     local.common_tags,
